@@ -21,7 +21,6 @@ import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload'
 import { ISignature } from '@ts-core/common/crypto';
 import { IDestroyable } from '@ts-core/common/IDestroyable';
 import { ITransportCryptoManager } from '@ts-core/common/transport/crypto';
-import { ITransportFabricSettings } from '../client';
 
 export class TransportFabricChaincodeTransport extends Transport<ITransportFabricChaincodeSettings> {
     // --------------------------------------------------------------------------
@@ -30,7 +29,7 @@ export class TransportFabricChaincodeTransport extends Transport<ITransportFabri
     //
     // --------------------------------------------------------------------------
 
-    constructor(logger: ILogger, settings?: ITransportFabricSettings) {
+    constructor(logger: ILogger, settings?: ITransportFabricChaincodeSettings) {
         super(logger, settings);
     }
 
