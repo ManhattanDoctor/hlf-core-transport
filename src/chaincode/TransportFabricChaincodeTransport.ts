@@ -39,6 +39,40 @@ export class TransportFabricChaincodeTransport extends Transport<ITransportFabri
     //
     // --------------------------------------------------------------------------
 
+    public invoke<U = any>(stub: ChaincodeStub): Promise<TransportFabricResponsePayload<U>> {
+        let command: ITransportCommand<U> = null;
+        let payload: TransportFabricRequestPayload<U> = null;
+        try {
+            payload = TransportFabricRequestPayload.parse(stub);
+            command = TransportFabricRequestPayload.createCommand(payload, stub, this);
+            if (!this.isNonSignedCommand(command)) {
+                this.validateSignature(command, payload.options.signature);
+            }
+        } catch (error) {
+            error = ExtendedError.create(error);
+            this.warn(`Unable to create command: ${error.message}`);
+            return Promise.resolve(TransportFabricResponsePayload.fromError(!_.isNil(payload) ? payload.id : null, error));
+        }
+
+        this.logCommand(command, TransportLogType.REQUEST_RECEIVED);
+        let request = this.checkRequestStorage(command, payload);
+
+        if (this.isRequestExpired(request)) {
+            this.logCommand(command, TransportLogType.REQUEST_EXPIRED);
+            this.warn(`Received "${command.name}" command with already expired timeout: ignore`);
+            this.requests.delete(command.id);
+            return;
+        }
+
+        let listener = this.listeners.get(command.name);
+        if (_.isNil(listener)) {
+            this.complete(command, new ExtendedError(`No listener for "${command.name}" command`));
+            return request.handler.promise;
+        }
+        listener.next(command);
+        return request.handler.promise;
+    }
+    
     public complete<U, V>(command: ITransportCommand<U>, result?: V | Error): void {
         let request = this.requests.get(command.id) as ITransportFabricRequestStorage;
         this.requests.delete(command.id);
@@ -124,40 +158,6 @@ export class TransportFabricChaincodeTransport extends Transport<ITransportFabri
     //  Recevie Message Methods
     //
     // --------------------------------------------------------------------------
-
-    public invoke<U = any>(stub: ChaincodeStub): Promise<TransportFabricResponsePayload<U>> {
-        let command: ITransportCommand<U> = null;
-        let payload: TransportFabricRequestPayload<U> = null;
-        try {
-            payload = TransportFabricRequestPayload.parse(stub);
-            command = TransportFabricRequestPayload.createCommand(payload, stub, this);
-            if (!this.isNonSignedCommand(command)) {
-                this.validateSignature(command, payload.options.signature);
-            }
-        } catch (error) {
-            error = ExtendedError.create(error);
-            this.warn(`Unable to create command: ${error.message}`);
-            return Promise.resolve(TransportFabricResponsePayload.fromError(!_.isNil(payload) ? payload.id : null, error));
-        }
-
-        this.logCommand(command, TransportLogType.REQUEST_RECEIVED);
-        let request = this.checkRequestStorage(command, payload);
-
-        if (this.isRequestExpired(request)) {
-            this.logCommand(command, TransportLogType.REQUEST_EXPIRED);
-            this.warn(`Received "${command.name}" command with already expired timeout: ignore`);
-            this.requests.delete(command.id);
-            return;
-        }
-
-        let listener = this.listeners.get(command.name);
-        if (_.isNil(listener)) {
-            this.complete(command, new ExtendedError(`No listener for "${command.name}" command`));
-            return request.handler.promise;
-        }
-        listener.next(command);
-        return request.handler.promise;
-    }
 
     protected checkRequestStorage<U>(command: ITransportCommand<U>, payload: TransportFabricRequestPayload<U>): ITransportFabricRequestStorage {
         let item = this.requests.get(command.id) as ITransportFabricRequestStorage;
