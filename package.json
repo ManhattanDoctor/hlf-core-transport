@@ -8,7 +8,7 @@
         "email": "renat.gubaev@gmail.com"
     },
     "license": "ISC",
-    "dependencies": {
+    "peerDependencies": {
         "@ts-core/common": "^1.0.121",
         "@hlf-core/api": "^1.0.0",
         "reflect-metadata": "0.1.13",
