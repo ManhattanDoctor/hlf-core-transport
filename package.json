@@ -1,0 +1,43 @@
+{
+    "name": "@hlf-core/transport",
+    "version": "1.0.1",
+    "description": "Hyperledger transport ",
+    "main": "index.js",
+    "author": {
+        "name": "Renat Gubaev",
+        "email": "renat.gubaev@gmail.com"
+    },
+    "license": "ISC",
+    "dependencies": {
+        "@ts-core/common": "^1.0.121",
+        "@hlf-core/api": "^1.0.0",
+        "reflect-metadata": "0.1.13",
+        "fabric-client": "1.4.7",
+        "fabric-network": "1.4.7",
+        "fabric-shim": "1.4.5"
+    },
+    "devDependencies": {
+        "@types/node": "12.12.18",
+        "gulp": "4.0.2",
+        "gulp-clean": "0.4.0",
+        "gulp-typescript": "5.0.1",
+        "del": "5.1.0",
+        "gulp-clean-dir": "1.0.2",
+        "gulp-debug": "4.0.0",
+        "gulp-run-command": "0.0.10",
+        "prettier": "1.19.1",
+        "typescript": "3.4.5",
+        "ts-node": "8.6.2"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ManhattanDoctor/hlf-core-chaincode.git"
+    },
+    "keywords": [
+        "typescript"
+    ],
+    "bugs": {
+        "url": "https://github.com/ManhattanDoctor/hlf-core-chaincode/issues"
+    },
+    "homepage": "https://github.com/ManhattanDoctor/hlf-core-chaincode#readme"
+}
