@@ -1,6 +1,6 @@
 {
     "name": "@hlf-core/transport",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Hyperledger transport ",
     "main": "index.js",
     "author": {
