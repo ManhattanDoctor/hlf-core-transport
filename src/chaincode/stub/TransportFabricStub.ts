@@ -4,7 +4,7 @@ import { ChaincodeStub, Iterators, StateQueryResponse } from 'fabric-shim';
 import * as _ from 'lodash';
 import { ITransportFabricStub } from './ITransportFabricStub';
 import { ITransportEvent } from '@ts-core/common/transport';
-import { TransportFabricChaincodeTransport } from '../TransportFabricChaincodeTransport';
+import { TransportFabricChaincodeReceiver } from '../TransportFabricChaincodeReceiver';
 import { ITransportFabricCommandOptions } from '../../ITransportFabricCommandOptions';
 import { TRANSPORT_CHAINCODE_EVENT } from '../../constants';
 
@@ -16,7 +16,7 @@ export class TransportFabricStub implements ITransportFabricStub {
     // --------------------------------------------------------------------------
 
     private _stub: ChaincodeStub;
-    private _transport: TransportFabricChaincodeTransport;
+    private _transport: TransportFabricChaincodeReceiver;
 
     private _requestId: string;
 
@@ -31,7 +31,7 @@ export class TransportFabricStub implements ITransportFabricStub {
     //
     // --------------------------------------------------------------------------
 
-    constructor(stub: ChaincodeStub, requestId: string, options: ITransportFabricCommandOptions, transport: TransportFabricChaincodeTransport) {
+    constructor(stub: ChaincodeStub, requestId: string, options: ITransportFabricCommandOptions, transport: TransportFabricChaincodeReceiver) {
         this._stub = stub;
         this._transport = transport;
         this._requestId = requestId;
@@ -156,7 +156,7 @@ export class TransportFabricStub implements ITransportFabricStub {
     //
     // --------------------------------------------------------------------------
 
-    public get transport(): TransportFabricChaincodeTransport {
+    public get transport(): TransportFabricChaincodeReceiver {
         return this._transport;
     }
 

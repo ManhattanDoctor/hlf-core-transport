@@ -10,7 +10,7 @@
     "license": "ISC",
     "peerDependencies": {
         "@ts-core/common": "^1.0.121",
-        "@hlf-core/api": "^1.0.0",
+        "@hlf-core/api": "^1.0.1",
         "reflect-metadata": "0.1.13",
         "fabric-client": "1.4.7",
         "fabric-network": "1.4.7",

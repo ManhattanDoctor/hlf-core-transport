@@ -1,1 +1,1 @@
-export * from './TransportFabricClient';
+export * from './TransportFabricSender';

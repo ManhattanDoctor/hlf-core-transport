@@ -7,7 +7,7 @@ import { ChaincodeInterface, ChaincodeResponse, ChaincodeStub } from 'fabric-shi
 import * as _ from 'lodash';
 import { Observable, Subject } from 'rxjs';
 import { TransportFabricResponsePayload } from '../TransportFabricResponsePayload';
-import { TransportFabricChaincodeTransport } from './TransportFabricChaincodeTransport';
+import { TransportFabricChaincodeReceiver } from './TransportFabricChaincodeReceiver';
 
 export abstract class TransportFabricChaincode<T> extends LoggerWrapper implements ChaincodeInterface {
     // --------------------------------------------------------------------------
@@ -24,7 +24,7 @@ export abstract class TransportFabricChaincode<T> extends LoggerWrapper implemen
     //
     // --------------------------------------------------------------------------
 
-    constructor(logger: ILogger, protected transport: TransportFabricChaincodeTransport) {
+    constructor(logger: ILogger, protected transport: TransportFabricChaincodeReceiver) {
         super(logger);
         this.observer = new Subject();
     }

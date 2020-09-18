@@ -22,7 +22,7 @@ import { ISignature } from '@ts-core/common/crypto';
 import { IDestroyable } from '@ts-core/common/IDestroyable';
 import { ITransportCryptoManager } from '@ts-core/common/transport/crypto';
 
-export class TransportFabricChaincodeTransport extends Transport<ITransportFabricChaincodeSettings> {
+export class TransportFabricChaincodeReceiver extends Transport<ITransportFabricChaincodeSettings> {
     // --------------------------------------------------------------------------
     //
     //  Constructor
@@ -72,7 +72,7 @@ export class TransportFabricChaincodeTransport extends Transport<ITransportFabri
         listener.next(command);
         return request.handler.promise;
     }
-    
+
     public complete<U, V>(command: ITransportCommand<U>, result?: V | Error): void {
         let request = this.requests.get(command.id) as ITransportFabricRequestStorage;
         this.requests.delete(command.id);

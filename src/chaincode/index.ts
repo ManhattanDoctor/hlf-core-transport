@@ -1,2 +1,2 @@
 export * from './TransportFabricChaincode';
-export * from './TransportFabricChaincodeTransport';
+export * from './TransportFabricChaincodeReceiver';

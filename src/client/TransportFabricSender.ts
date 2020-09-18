@@ -26,7 +26,7 @@ import { TransportFabricCommandOptions } from '../TransportFabricCommandOptions'
 import { TRANSPORT_FABRIC_METHOD } from '../constants';
 import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload';
 
-export class TransportFabricClient extends Transport<ITransportFabricSettings> {
+export class TransportFabricSender extends Transport<ITransportFabricSettings> {
     // --------------------------------------------------------------------------
     //
     //  Static Methods
@@ -35,7 +35,7 @@ export class TransportFabricClient extends Transport<ITransportFabricSettings> {
 
     private static parseEndorsementError<U>(command: ITransportCommand<U>, error: any): ExtendedError {
         if (!_.isEmpty(error.endorsements)) {
-            return TransportFabricClient.parseEndorsementError(command, error.endorsements[0]);
+            return TransportFabricSender.parseEndorsementError(command, error.endorsements[0]);
         }
 
         let defaultError = new ExtendedError(`Unable to send "${command.name}" command request: ${error.message}`);
@@ -214,7 +214,7 @@ export class TransportFabricClient extends Transport<ITransportFabricSettings> {
                 this.responseMessageReceived(command.id, response);
             }
         } catch (error) {
-            error = ExtendedError.instanceOf(error) ? error : TransportFabricClient.parseEndorsementError(command, error);
+            error = ExtendedError.instanceOf(error) ? error : TransportFabricSender.parseEndorsementError(command, error);
 
             this.error(error);
             if (!this.isCommandAsync(command)) {

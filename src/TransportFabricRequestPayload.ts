@@ -6,7 +6,7 @@ import { Type } from 'class-transformer';
 import { ChaincodeStub } from 'fabric-shim';
 import { TRANSPORT_FABRIC_METHOD } from './constants';
 import { ITransportFabricRequestPayload } from './ITransportFabricRequestPayload';
-import { TransportFabricChaincodeTransport } from './chaincode';
+import { TransportFabricChaincodeReceiver } from './chaincode';
 import { TransportFabricCommandOptions } from './TransportFabricCommandOptions';
 import { TransportFabricStub, ITransportFabricStub, ITransportFabricStubHolder } from './chaincode/stub';
 
@@ -39,7 +39,7 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
     public static createCommand<U>(
         payload: TransportFabricRequestPayload<U>,
         stub: ChaincodeStub,
-        manager: TransportFabricChaincodeTransport
+        manager: TransportFabricChaincodeReceiver
     ): ITransportCommand<U> {
         return new TransportCommandFabricAsyncImpl(payload, stub, manager);
     }
@@ -89,7 +89,7 @@ class TransportCommandFabricAsyncImpl<U, V> extends TransportCommandAsync<U, V> 
     //
     // --------------------------------------------------------------------------
 
-    constructor(payload: TransportFabricRequestPayload, stub: ChaincodeStub, transport: TransportFabricChaincodeTransport) {
+    constructor(payload: TransportFabricRequestPayload, stub: ChaincodeStub, transport: TransportFabricChaincodeReceiver) {
         super(payload.name, payload.request, payload.id);
         this._stub = new TransportFabricStub(stub, payload.id, payload.options, transport);
     }
