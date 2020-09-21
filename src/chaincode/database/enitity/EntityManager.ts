@@ -6,7 +6,7 @@ import { TransformUtil } from '@ts-core/common/util';
 import { ITransportFabricStub } from '../../stub';
 import { UID, IUIDable } from '@ts-core/common/dto';
 
-export abstract class EntityDatabaseManager<U extends IUIDable> extends DatabaseManager {
+export abstract class EntityManager<U extends IUIDable> extends DatabaseManager {
     // --------------------------------------------------------------------------
     //
     //  Constructor
