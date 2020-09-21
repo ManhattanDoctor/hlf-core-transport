@@ -8,13 +8,13 @@
         "email": "renat.gubaev@gmail.com"
     },
     "license": "ISC",
-    "peerDependencies": {
-        "@ts-core/common": "^1.0.121",
+    "dependencies": {
         "@hlf-core/api": "^1.0.1",
-        "reflect-metadata": "0.1.13",
+        "@ts-core/common": "^1.0.122",
         "fabric-client": "1.4.7",
         "fabric-network": "1.4.7",
-        "fabric-shim": "1.4.5"
+        "fabric-shim": "1.4.5",
+        "reflect-metadata": "0.1.13"
     },
     "devDependencies": {
         "@types/node": "12.12.18",

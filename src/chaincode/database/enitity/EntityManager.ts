@@ -1,10 +1,10 @@
 import { ILogger } from '@ts-core/common/logger';
 import * as _ from 'lodash';
-import { IPaginableBookmark, IPaginationBookmark } from '@ts-core/common/dto';
+import { IPaginableBookmark, IPaginationBookmark, getUid } from '@ts-core/common/dto';
 import { DatabaseManager, KeyValue } from '../DatabaseManager';
 import { TransformUtil } from '@ts-core/common/util';
 import { ITransportFabricStub } from '../../stub';
-import { UID, IUIDable } from '../IUIDable';
+import { UID, IUIDable } from '@ts-core/common/dto';
 
 export abstract class EntityDatabaseManager<U extends IUIDable> extends DatabaseManager {
     // --------------------------------------------------------------------------
@@ -22,13 +22,6 @@ export abstract class EntityDatabaseManager<U extends IUIDable> extends Database
     //  Protected Methods
     //
     // --------------------------------------------------------------------------
-
-    protected getUid(item: UID): string {
-        if (_.isNil(item)) {
-            return null;
-        }
-        return _.isString(item) ? item : item.uid;
-    }
 
     protected getFindOptions(options?: IFindOptions): IFindOptions {
         if (_.isNil(options)) {
@@ -62,7 +55,7 @@ export abstract class EntityDatabaseManager<U extends IUIDable> extends Database
     // --------------------------------------------------------------------------
 
     public async get(item: UID, details?: Array<keyof U>): Promise<U> {
-        return this.deserialize(await this.stub.getState(this.getUid(item)), details);
+        return this.deserialize(await this.stub.getState(getUid(item)), details);
     }
 
     public async getMany(items: Array<UID>, details?: Array<keyof U>): Promise<Array<U>> {
@@ -70,13 +63,13 @@ export abstract class EntityDatabaseManager<U extends IUIDable> extends Database
     }
 
     public async save(item: U): Promise<U> {
-        await this.stub.putState(this.getUid(item), await this.serialize(item), false, false);
+        await this.stub.putState(getUid(item), await this.serialize(item), false, false);
         this.log(`"${item.uid}" saved`);
         return item;
     }
 
     public async has(item: UID): Promise<boolean> {
-        return !_.isNil(await this.stub.getState(this.getUid(item)));
+        return !_.isNil(await this.stub.getState(getUid(item)));
     }
 
     public async saveMany(items: Array<U>): Promise<Array<U>> {
@@ -84,7 +77,7 @@ export abstract class EntityDatabaseManager<U extends IUIDable> extends Database
     }
 
     public async saveIfNotExists(item: U): Promise<U> {
-        if (await this.stub.hasState(this.getUid(item))) {
+        if (await this.stub.hasState(getUid(item))) {
             return item;
         }
         return this.save(item);
@@ -95,8 +88,8 @@ export abstract class EntityDatabaseManager<U extends IUIDable> extends Database
     }
 
     public async remove(item: UID): Promise<void> {
-        await this.stub.removeState(this.getUid(item));
-        this.log(`"${this.getUid(item)}" removed`);
+        await this.stub.removeState(getUid(item));
+        this.log(`"${getUid(item)}" removed`);
     }
 
     public async removeMany(items: Array<UID>): Promise<void> {
