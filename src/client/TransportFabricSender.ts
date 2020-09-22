@@ -14,8 +14,7 @@ import {
     ITransportCommandOptions
 } from '@ts-core/common/transport';
 import { DateUtil, ObjectUtil, TransformUtil, ValidateUtil } from '@ts-core/common/util';
-import { Channel } from 'fabric-client';
-import { ContractEventListener, Contract, Gateway, Network, Wallet } from 'fabric-network';
+import { ContractEventListener } from 'fabric-network';
 import * as _ from 'lodash';
 import { IFabricConnectionSettings, FabricApiClient } from '@hlf-core/api';
 import { ITransportSettings } from '@ts-core/common/transport';
@@ -63,12 +62,7 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
     private connectionPromise: PromiseHandler<void, ExtendedError>;
     private connectionAttempts: number;
 
-    private _network: Network;
-    private _channel: Channel;
-    private _contract: Contract;
-
-    private _wallet: Wallet;
-    private _gateway: Gateway;
+    private _api: FabricApiClient;
     private _isConnected: boolean;
 
     // --------------------------------------------------------------------------
@@ -79,6 +73,8 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
 
     constructor(logger: ILogger, settings: ITransportFabricConnectionSettings, context?: string) {
         super(logger, settings, context);
+
+        this._api = new FabricApiClient(logger, settings);
         this.contractEvents = new Map();
     }
 
@@ -119,7 +115,7 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
             this.connectionPromise = null;
         }
 
-        this.gateway = null;
+        this.api.disconnect();
         this._isConnected = false;
 
         for (let item of this.contractEvents.values()) {
@@ -163,7 +159,7 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
 
     public getDispatcher<T>(name: string): Observable<T> {
         if (!this.contractEvents.has(name)) {
-            this.contractEvents.set(name, this.contract.addContractListener(name, name, this.contractEventCallback));
+            this.contractEvents.set(name, this.api.contract.addContractListener(name, name, this.contractEventCallback));
         }
         return super.getDispatcher(name);
     }
@@ -204,12 +200,12 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
 
         try {
             let request = this.createRequestOptions(command, options, isNeedReply);
-            let method = this.isCommandQuery(command) ? this.contract.evaluateTransaction : this.contract.submitTransaction;
+            let method = this.isCommandQuery(command) ? this.api.contract.evaluateTransaction : this.api.contract.submitTransaction;
 
             this.logCommand(command, isNeedReply ? TransportLogType.REQUEST_SENDED : TransportLogType.REQUEST_NO_REPLY);
             this.observer.next(new ObservableData(LoadableEvent.STARTED, command));
 
-            let response = await method.call(this.contract, request.method, TransformUtil.fromJSON(TransformUtil.fromClass(request.payload)));
+            let response = await method.call(this.api.contract, request.method, TransformUtil.fromJSON(TransformUtil.fromClass(request.payload)));
             if (this.isCommandAsync(command) && isNeedReply) {
                 this.responseMessageReceived(command.id, response);
             }
@@ -325,33 +321,8 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
     };
 
     protected connectionConnectErrorHandler = (error: ExtendedError): void => {
-        console.log('connectionConnectErrorHandler', error);
         this.disconnect(error);
     };
-
-    protected connectionClosedHandler = (error: any): void => {
-        console.log('connectionClosedHandler', error);
-        this.disconnect(ExtendedError.create(error));
-    };
-
-    // --------------------------------------------------------------------------
-    //
-    //  Protected Methods
-    //
-    // --------------------------------------------------------------------------
-
-    protected get gateway(): Gateway {
-        return this._gateway;
-    }
-    protected set gateway(value: Gateway) {
-        if (this._gateway) {
-            this._network = null;
-            this._channel = null;
-            this._contract = null;
-            this._gateway.disconnect();
-        }
-        this._gateway = value;
-    }
 
     // --------------------------------------------------------------------------
     //
@@ -364,16 +335,7 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
 
         this.connectionAttempts++;
         try {
-            this.gateway = new Gateway();
-            await this.gateway.connect(this.settings.fabricConnectionSettingsPath, {
-                wallet: await this.getWallet(),
-                identity: this.settings.fabricIdentity,
-                discovery: { enabled: this.settings.fabricIsDiscoveryEnabled, asLocalhost: true }
-            });
-
-            this._network = await this.gateway.getNetwork(this.settings.fabricNetworkName);
-            this._channel = this.network.getChannel();
-            this._contract = this.network.getContract(this.settings.fabricChaincodeName);
+            await this.api.connect();
             this.connectionConnectCompleteHandler();
         } catch (error) {
             error = ExtendedError.create(error, TransportTimeoutError.ERROR_CODE);
@@ -385,13 +347,6 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
             this.debug(`Trying to reconnect (attempt ${this.connectionAttempts}): ${error.message}`);
             this.reconnect();
         }
-    }
-
-    protected async getWallet(): Promise<Wallet> {
-        if (_.isNil(this._wallet)) {
-            this._wallet = await FabricApiClient.createWallet(this.settings);
-        }
-        return this._wallet;
     }
 
     protected contractEventCallback = <T>(error: Error, event: any): void => {
@@ -419,16 +374,8 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
         return this._isConnected;
     }
 
-    public get network(): Network {
-        return this._network;
-    }
-
-    public get channel(): Channel {
-        return this._channel;
-    }
-
-    public get contract(): Contract {
-        return this._contract;
+    public get api(): FabricApiClient {
+        return this._api;
     }
 }
 
