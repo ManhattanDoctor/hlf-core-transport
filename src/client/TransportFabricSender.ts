@@ -17,7 +17,7 @@ import { DateUtil, ObjectUtil, TransformUtil, ValidateUtil } from '@ts-core/comm
 import { Channel } from 'fabric-client';
 import { ContractEventListener, Contract, Gateway, Network, Wallet } from 'fabric-network';
 import * as _ from 'lodash';
-import { IFabricApiSettings, FabricApiClient } from '@hlf-core/api';
+import { IFabricConnectionSettings, FabricApiClient } from '@hlf-core/api';
 import { ITransportSettings } from '@ts-core/common/transport';
 import { TransportFabricResponsePayload } from '../TransportFabricResponsePayload';
 import { ITransportFabricCommandOptions } from '../ITransportFabricCommandOptions';
@@ -26,7 +26,7 @@ import { TransportFabricCommandOptions } from '../TransportFabricCommandOptions'
 import { TRANSPORT_FABRIC_METHOD } from '../constants';
 import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload';
 
-export class TransportFabricSender extends Transport<ITransportFabricSettings> {
+export class TransportFabricSender extends Transport<ITransportFabricConnectionSettings> {
     // --------------------------------------------------------------------------
     //
     //  Static Methods
@@ -77,7 +77,7 @@ export class TransportFabricSender extends Transport<ITransportFabricSettings> {
     //
     // --------------------------------------------------------------------------
 
-    constructor(logger: ILogger, settings: ITransportFabricSettings, context?: string) {
+    constructor(logger: ILogger, settings: ITransportFabricConnectionSettings, context?: string) {
         super(logger, settings, context);
         this.contractEvents = new Map();
     }
@@ -432,7 +432,7 @@ export class TransportFabricSender extends Transport<ITransportFabricSettings> {
     }
 }
 
-export interface ITransportFabricSettings extends IFabricApiSettings, ITransportSettings {
+export interface ITransportFabricConnectionSettings extends IFabricConnectionSettings, ITransportSettings {
     reconnectDelay?: number;
     reconnectMaxAttempts?: number;
     isExitApplicationOnDisconnect?: boolean;
