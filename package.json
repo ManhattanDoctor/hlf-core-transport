@@ -1,7 +1,7 @@
 {
     "name": "@hlf-core/transport",
     "version": "1.0.12",
-    "description": "Hyperledger transport ",
+    "description": "Hyperledger transport",
     "main": "index.js",
     "author": {
         "name": "Renat Gubaev",
