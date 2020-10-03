@@ -39,14 +39,14 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
     //
     // --------------------------------------------------------------------------
 
-    public invoke<U = any>(stub: ChaincodeStub): Promise<TransportFabricResponsePayload<U>> {
+    public async invoke<U = any>(stub: ChaincodeStub): Promise<TransportFabricResponsePayload<U>> {
         let command: ITransportCommand<U> = null;
         let payload: TransportFabricRequestPayload<U> = null;
         try {
             payload = TransportFabricRequestPayload.parse(stub);
             command = TransportFabricRequestPayload.createCommand(payload, stub, this);
             if (!this.isNonSignedCommand(command)) {
-                this.validateSignature(command, payload.options.signature);
+                await this.validateSignature(command, payload.options.signature);
             }
         } catch (error) {
             error = ExtendedError.create(error);
@@ -181,7 +181,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         return !_.isEmpty(this.getSettingsValue('nonSignedCommands')) && this.getSettingsValue('nonSignedCommands').includes(command.name);
     }
 
-    protected validateSignature<U>(command: ITransportCommand<U>, signature: ISignature): void {
+    protected async validateSignature<U>(command: ITransportCommand<U>, signature: ISignature): Promise<void> {
         if (_.isNil(signature)) {
             throw new ExtendedError(`Command "${command.name}" has nil signature`);
         }
@@ -200,7 +200,8 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
             throw new ExtendedError(`Command "${command.name}" signature algorithm (${signature.algorithm}) doesn't support`);
         }
 
-        if (!manager.verify(command, signature)) {
+        let isVerified = await manager.verify(command, signature);
+        if (!isVerified) {
             throw new ExtendedError(`Command "${command.name}" has invalid signature`);
         }
     }
