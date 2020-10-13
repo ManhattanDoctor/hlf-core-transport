@@ -48,7 +48,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         let payload: TransportFabricRequestPayload<U> = null;
         try {
             payload = TransportFabricRequestPayload.parse(stub);
-            command = this.createCommand(stub, payload);
+            command = this.createCommandWrapper(stub, payload);
             // TransportFabricRequestPayload.createCommand(payload, stub, this);
             if (!this.isNonSignedCommand(command)) {
                 await this.validateSignature(command, payload.options.signature);
@@ -211,7 +211,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         }
     }
 
-    protected createCommand(stub: ChaincodeStub, payload: ITransportFabricRequestPayload): TransportFabricChaincodeCommandWrapper {
+    protected createCommandWrapper(stub: ChaincodeStub, payload: ITransportFabricRequestPayload): TransportFabricChaincodeCommandWrapper {
         let command = this.getSettingsValue('commandFactory', item => new TransportCommandAsync(item.name, item.request, item.id))(payload);
         let transportStub = this.getSettingsValue(
             'stubFactory',

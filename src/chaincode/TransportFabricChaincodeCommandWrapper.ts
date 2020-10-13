@@ -44,7 +44,6 @@ export class TransportFabricChaincodeCommandWrapper<U = any, V = any> implements
     public destroy(): void {
         this._stub.destroy();
         this._stub = null;
-
         this.command = null;
     }
 
