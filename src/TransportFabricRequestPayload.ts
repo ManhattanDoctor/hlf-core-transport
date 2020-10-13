@@ -89,7 +89,7 @@ class TransportCommandFabricAsyncImpl<U, V> extends TransportCommandAsync<U, V> 
     //
     // --------------------------------------------------------------------------
 
-    constructor(payload: TransportFabricRequestPayload, stub: ChaincodeStub, transport: TransportFabricChaincodeReceiver) {
+    constructor(payload: TransportFabricRequestPayload<U>, stub: ChaincodeStub, transport: TransportFabricChaincodeReceiver) {
         super(payload.name, payload.request, payload.id);
         this._stub = new TransportFabricStub(stub, payload.id, payload.options, transport);
     }
@@ -101,7 +101,6 @@ class TransportCommandFabricAsyncImpl<U, V> extends TransportCommandAsync<U, V> 
     // --------------------------------------------------------------------------
 
     public destroy(): void {
-        this._stub.dispatchEvents();
         this._stub.destroy();
         this._stub = null;
     }

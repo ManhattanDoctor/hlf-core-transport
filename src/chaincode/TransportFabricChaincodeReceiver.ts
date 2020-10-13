@@ -10,7 +10,8 @@ import {
     TransportLogType,
     ITransportSettings,
     ITransportCommandOptions,
-    ITransportCommandAsync
+    ITransportCommandAsync,
+    TransportCommandAsync
 } from '@ts-core/common/transport';
 import { TransportWaitExceedError } from '@ts-core/common/transport/error';
 import { DateUtil, ObjectUtil } from '@ts-core/common/util';
@@ -21,6 +22,9 @@ import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload'
 import { ISignature } from '@ts-core/common/crypto';
 import { IDestroyable } from '@ts-core/common/IDestroyable';
 import { ITransportCryptoManager } from '@ts-core/common/transport/crypto';
+import { ITransportFabricRequestPayload } from '../ITransportFabricRequestPayload';
+import { ITransportFabricStub, TransportFabricStub } from './stub';
+import { TransportFabricChaincodeCommandWrapper } from './TransportFabricChaincodeCommandWrapper';
 
 export class TransportFabricChaincodeReceiver extends Transport<ITransportFabricChaincodeSettings> {
     // --------------------------------------------------------------------------
@@ -44,7 +48,8 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         let payload: TransportFabricRequestPayload<U> = null;
         try {
             payload = TransportFabricRequestPayload.parse(stub);
-            command = TransportFabricRequestPayload.createCommand(payload, stub, this);
+            command = this.createCommand(stub, payload);
+            // TransportFabricRequestPayload.createCommand(payload, stub, this);
             if (!this.isNonSignedCommand(command)) {
                 await this.validateSignature(command, payload.options.signature);
             }
@@ -205,11 +210,23 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
             throw new ExtendedError(`Command "${command.name}" has invalid signature`);
         }
     }
+
+    protected createCommand(stub: ChaincodeStub, payload: ITransportFabricRequestPayload): TransportFabricChaincodeCommandWrapper {
+        let command = this.getSettingsValue('commandFactory', item => new TransportCommandAsync(item.name, item.request, item.id))(payload);
+        let transportStub = this.getSettingsValue(
+            'stubFactory',
+            (stub, payload, transport) => new TransportFabricStub(stub, payload.id, payload.options, transport)
+        )(stub, payload, this);
+        return new TransportFabricChaincodeCommandWrapper(payload, command, transportStub);
+    }
 }
 
 export interface ITransportFabricChaincodeSettings extends ITransportSettings {
     cryptoManagers?: Array<ITransportCryptoManager>;
     nonSignedCommands?: Array<string>;
+
+    stubFactory?: <U>(stub: ChaincodeStub, payload: TransportFabricRequestPayload<U>, transport: TransportFabricChaincodeReceiver) => ITransportFabricStub;
+    commandFactory?: <U>(payload: ITransportFabricRequestPayload<U>) => ITransportCommand<U>;
 }
 
 interface ITransportFabricRequestStorage<U = any> extends ITransportRequestStorage {

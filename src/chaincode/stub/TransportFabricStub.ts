@@ -139,13 +139,14 @@ export class TransportFabricStub implements ITransportFabricStub {
         if (_.isEmpty(this.eventsToDispatch)) {
             return;
         }
-
         let items = TransformUtil.fromJSONMany(TransformUtil.fromClassMany(this.eventsToDispatch));
         this.stub.setEvent(TRANSPORT_CHAINCODE_EVENT, Buffer.from(JSON.stringify(items), TransformUtil.ENCODING));
     }
 
     public destroy(): void {
+        this.dispatchEvents();
         this.eventsToDispatch = null;
+
         this._stub = null;
         this._transport = null;
     }
