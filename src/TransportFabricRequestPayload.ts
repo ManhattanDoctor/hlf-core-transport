@@ -57,7 +57,7 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
     public name: string;
 
     @IsOptional()
-    public request: U;
+    public request?: U;
 
     @Type(() => TransportFabricCommandOptions)
     @IsDefined()

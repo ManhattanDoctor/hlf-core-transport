@@ -45,7 +45,7 @@ export class TransportFabricResponsePayload<U = any, V = any> implements ITransp
     public id: string;
 
     @IsOptional()
-    public response: V | ExtendedError;
+    public response?: V | ExtendedError;
 
     // --------------------------------------------------------------------------
     //

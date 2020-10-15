@@ -139,11 +139,11 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
     //
     // --------------------------------------------------------------------------
 
-    public send<U>(command: ITransportCommand<U>, options: ITransportCommandOptions): void {
+    public send<U>(command: ITransportCommand<U>, options?: ITransportCommandOptions): void {
         this.requestSend(command, this.getCommandOptions(command, options), false);
     }
 
-    public async sendListen<U, V>(command: ITransportCommandAsync<U, V>, options: ITransportCommandOptions): Promise<V> {
+    public async sendListen<U, V>(command: ITransportCommandAsync<U, V>, options?: ITransportCommandOptions): Promise<V> {
         if (this.promises.has(command.id)) {
             return this.promises.get(command.id).handler.promise;
         }

@@ -6,7 +6,7 @@ import * as shim from 'fabric-shim';
 import { ChaincodeInterface, ChaincodeResponse, ChaincodeStub } from 'fabric-shim';
 import * as _ from 'lodash';
 import { Observable, Subject } from 'rxjs';
-import { TransportFabricResponsePayload } from '../TransportFabricResponsePayload';
+import { ITransportFabricResponsePayload } from '../ITransportFabricResponsePayload';
 import { TransportFabricChaincodeReceiver } from './TransportFabricChaincodeReceiver';
 
 export abstract class TransportFabricChaincode<T> extends LoggerWrapper implements ChaincodeInterface {
@@ -67,7 +67,7 @@ export abstract class TransportFabricChaincode<T> extends LoggerWrapper implemen
     //
     // --------------------------------------------------------------------------
 
-    protected getContent<U>(response: TransportFabricResponsePayload<U>): Buffer {
+    protected getContent<V>(response: ITransportFabricResponsePayload<V>): Buffer {
         return !_.isNil(response) ? TransformUtil.fromClassBuffer(response) : Buffer.from('');
     }
 
@@ -84,9 +84,9 @@ export abstract class TransportFabricChaincode<T> extends LoggerWrapper implemen
     public abstract get name(): string;
 }
 
-export interface ITransportFabricChaincodeEventData {
+export interface ITransportFabricChaincodeEventData<V = any> {
     stub: ChaincodeStub;
-    response?: TransportFabricResponsePayload;
+    response?: ITransportFabricResponsePayload<V>;
 }
 
 export enum TransportFabricChaincodeEvent {
