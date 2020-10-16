@@ -10,8 +10,7 @@ import {
     ITransportEvent,
     Transport,
     TransportLogType,
-    TransportTimeoutError,
-    ITransportCommandOptions
+    TransportTimeoutError
 } from '@ts-core/common/transport';
 import { DateUtil, ObjectUtil, TransformUtil, ValidateUtil } from '@ts-core/common/util';
 import { ContractEventListener } from 'fabric-network';

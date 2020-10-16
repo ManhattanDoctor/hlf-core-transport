@@ -3,8 +3,7 @@ import { ClassType } from 'class-transformer/ClassTransformer';
 import { ChaincodeStub, Iterators, StateQueryResponse } from 'fabric-shim';
 import * as _ from 'lodash';
 import { ITransportFabricStub } from './ITransportFabricStub';
-import { ITransportEvent } from '@ts-core/common/transport';
-import { TransportFabricChaincodeReceiver } from '../TransportFabricChaincodeReceiver';
+import { ITransportEvent, ITransportReceiver } from '@ts-core/common/transport';
 import { ITransportFabricCommandOptions } from '../../ITransportFabricCommandOptions';
 import { TRANSPORT_CHAINCODE_EVENT } from '../../constants';
 
@@ -15,15 +14,15 @@ export class TransportFabricStub implements ITransportFabricStub {
     //
     // --------------------------------------------------------------------------
 
-    private _stub: ChaincodeStub;
-    private _transport: TransportFabricChaincodeReceiver;
+    protected _stub: ChaincodeStub;
 
-    private _requestId: string;
+    protected _requestId: string;
 
-    private _userId: string;
-    private _userPublicKey: string;
+    protected _userId: string;
+    protected _userPublicKey: string;
 
-    private eventsToDispatch: Array<ITransportEvent<any>>;
+    protected transport: ITransportReceiver;
+    protected eventsToDispatch: Array<ITransportEvent<any>>;
 
     // --------------------------------------------------------------------------
     //
@@ -31,11 +30,11 @@ export class TransportFabricStub implements ITransportFabricStub {
     //
     // --------------------------------------------------------------------------
 
-    constructor(stub: ChaincodeStub, requestId: string, options: ITransportFabricCommandOptions, transport: TransportFabricChaincodeReceiver) {
+    constructor(stub: ChaincodeStub, requestId: string, options: ITransportFabricCommandOptions, transport: ITransportReceiver) {
         this._stub = stub;
-        this._transport = transport;
         this._requestId = requestId;
 
+        this.transport = transport;
         this.eventsToDispatch = new Array();
 
         if (!_.isNil(options)) {
@@ -145,20 +144,11 @@ export class TransportFabricStub implements ITransportFabricStub {
 
     public destroy(): void {
         this.dispatchEvents();
-        this.eventsToDispatch = null;
 
         this._stub = null;
-        this._transport = null;
-    }
 
-    // --------------------------------------------------------------------------
-    //
-    //  Private Properties
-    //
-    // --------------------------------------------------------------------------
-
-    public get transport(): TransportFabricChaincodeReceiver {
-        return this._transport;
+        this.transport = null;
+        this.eventsToDispatch = null;
     }
 
     // --------------------------------------------------------------------------

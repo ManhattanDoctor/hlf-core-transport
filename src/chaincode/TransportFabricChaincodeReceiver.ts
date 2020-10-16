@@ -78,14 +78,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
             this.requests.delete(command.id);
             return;
         }
-
-        let listener = this.listeners.get(command.name);
-        if (_.isNil(listener)) {
-            this.complete(command, new ExtendedError(`No listener for "${command.name}" command`));
-            return request.handler.promise;
-        }
-        listener.next(command);
-        return request.handler.promise;
+        return this.executeCommand(command, request);
     }
 
     public complete<U, V>(command: ITransportCommand<U>, result?: V | Error): void {
@@ -135,15 +128,15 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
     }
 
     public getDispatcher<T>(name: string): Observable<T> {
-        throw new ExtendedError(`Method is not supported`);
+        throw new ExtendedError(`Method is not supported, use TransportFabricSender instead`);
     }
 
     public send<U>(command: ITransportCommand<U>, options?: ITransportCommandOptions): void {
-        throw new ExtendedError(`Method is not supported`);
+        throw new ExtendedError(`Method is not supported, use TransportFabricSender instead`);
     }
 
     public sendListen<U, V>(command: ITransportCommandAsync<U, V>, options?: ITransportCommandOptions): Promise<V> {
-        throw new ExtendedError(`Method is not supported`);
+        throw new ExtendedError(`Method is not supported, use TransportFabricSender instead`);
     }
 
     public destroy(): void {
@@ -174,7 +167,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
     //
     // --------------------------------------------------------------------------
 
-    protected checkRequestStorage<U>(command: ITransportCommand<U>, payload: TransportFabricRequestPayload<U>): ITransportFabricRequestStorage {
+    protected checkRequestStorage<U>(command: ITransportCommand<U>, payload: TransportFabricRequestPayload<U>): ITransportFabricRequestStorage<U> {
         let item = this.requests.get(command.id) as ITransportFabricRequestStorage;
         if (!_.isNil(item)) {
             item.waitCount++;
@@ -221,7 +214,17 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         }
     }
 
-    protected createCommand(stub: ChaincodeStub, payload: ITransportFabricRequestPayload): TransportFabricChaincodeCommandWrapper {
+    protected executeCommand<U, V>(command: ITransportCommand<U>, request: ITransportFabricRequestStorage<U, V>): Promise<ITransportFabricResponsePayload<V>> {
+        let listener = this.listeners.get(command.name);
+        if (_.isNil(listener)) {
+            this.complete(command, new ExtendedError(`No listener for "${command.name}" command`));
+            return request.handler.promise;
+        }
+        listener.next(command);
+        return request.handler.promise;
+    }
+
+    protected createCommand<U>(stub: ChaincodeStub, payload: ITransportFabricRequestPayload): ITransportCommand<U> {
         let command = this.getSettingsValue('commandFactory', this.defaultCreateCommandFactory)(payload);
         let transportStub = this.getSettingsValue('stubFactory', this.defaultCreateStubFactory)(stub, payload, this);
         return new TransportFabricChaincodeCommandWrapper(payload, command, transportStub);
