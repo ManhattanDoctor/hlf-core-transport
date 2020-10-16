@@ -11,7 +11,8 @@ import {
     ITransportSettings,
     ITransportCommandOptions,
     ITransportCommandAsync,
-    TransportCommandAsync
+    TransportCommandAsync,
+    ITransportReceiver
 } from '@ts-core/common/transport';
 import { TransportWaitExceedError } from '@ts-core/common/transport/error';
 import { DateUtil, ObjectUtil } from '@ts-core/common/util';
@@ -34,7 +35,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
     //
     // --------------------------------------------------------------------------
 
-    protected defaultCreateStubFactory = <U>(stub: ChaincodeStub, payload: TransportFabricRequestPayload<U>, transport: TransportFabricChaincodeReceiver) =>
+    protected defaultCreateStubFactory = <U>(stub: ChaincodeStub, payload: TransportFabricRequestPayload<U>, transport: ITransportReceiver) =>
         new TransportFabricStub(stub, payload.id, payload.options, transport);
     protected defaultCreateCommandFactory = <U>(item: ITransportFabricRequestPayload<U>) => new TransportCommandAsync(item.name, item.request, item.id);
 
@@ -54,11 +55,13 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
     //
     // --------------------------------------------------------------------------
 
-    public async invoke<U = any, V = any>(stub: ChaincodeStub): Promise<ITransportFabricResponsePayload<V>> {
+    public async invoke<U = any, V = any>(chaincode: ChaincodeStub): Promise<ITransportFabricResponsePayload<V>> {
         let command: ITransportCommand<U> = null;
+        let stub: ITransportFabricStub = null;
         let payload: TransportFabricRequestPayload<U> = null;
         try {
-            payload = TransportFabricRequestPayload.parse(stub);
+            payload = TransportFabricRequestPayload.parse(chaincode);
+            stub = this.createStub(chaincode, payload, this);
             command = this.createCommand(stub, payload);
             if (!this.isNonSignedCommand(command)) {
                 await this.validateSignature(command, payload.options.signature);
@@ -224,10 +227,13 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         }
     }
 
-    protected createCommand<U>(stub: ChaincodeStub, payload: ITransportFabricRequestPayload): ITransportCommand<U> {
+    protected createCommand<U>(stub: ITransportFabricStub, payload: ITransportFabricRequestPayload): ITransportCommand<U> {
         let command = this.getSettingsValue('commandFactory', this.defaultCreateCommandFactory)(payload);
-        let transportStub = this.getSettingsValue('stubFactory', this.defaultCreateStubFactory)(stub, payload, this);
-        return new TransportFabricChaincodeCommandWrapper(payload, command, transportStub);
+        return new TransportFabricChaincodeCommandWrapper(payload, command, stub);
+    }
+
+    protected createStub<U>(stub: ChaincodeStub, payload: TransportFabricRequestPayload<U>, transport: ITransportReceiver): ITransportFabricStub {
+        return this.getSettingsValue('stubFactory', this.defaultCreateStubFactory)(stub, payload, transport);
     }
 
     protected createResponsePayload<U, V = any>(command: ITransportCommand<U>): ITransportFabricResponsePayload<V> {
@@ -239,7 +245,7 @@ export interface ITransportFabricChaincodeSettings extends ITransportSettings {
     cryptoManagers?: Array<ITransportCryptoManager>;
     nonSignedCommands?: Array<string>;
 
-    stubFactory?: <U>(stub: ChaincodeStub, payload: TransportFabricRequestPayload<U>, transport: TransportFabricChaincodeReceiver) => ITransportFabricStub;
+    stubFactory?: <U>(stub: ChaincodeStub, payload: TransportFabricRequestPayload<U>, transport: ITransportReceiver) => ITransportFabricStub;
     commandFactory?: <U>(payload: ITransportFabricRequestPayload<U>) => ITransportCommand<U>;
 }
 
