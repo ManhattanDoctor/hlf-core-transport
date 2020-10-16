@@ -62,7 +62,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         try {
             payload = TransportFabricRequestPayload.parse(chaincode);
             stub = this.createStub(chaincode, payload, this);
-            command = this.createCommand(stub, payload);
+            command = this.createCommand(payload, stub);
             if (!this.isNonSignedCommand(command)) {
                 await this.validateSignature(command, payload.options.signature);
             }
@@ -73,7 +73,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         }
 
         this.logCommand(command, TransportLogType.REQUEST_RECEIVED);
-        let request = this.checkRequestStorage(command, payload);
+        let request = this.checkRequestStorage(payload, stub, command);
 
         if (this.isRequestExpired(request)) {
             this.logCommand(command, TransportLogType.REQUEST_EXPIRED);
@@ -81,7 +81,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
             this.requests.delete(command.id);
             return;
         }
-        await this.executeCommand(payload, command);
+        await this.executeCommand(payload, stub, command);
         return request.handler.promise;
     }
 
@@ -171,7 +171,11 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
     //
     // --------------------------------------------------------------------------
 
-    protected checkRequestStorage<U>(command: ITransportCommand<U>, payload: TransportFabricRequestPayload<U>): ITransportFabricRequestStorage<U> {
+    protected checkRequestStorage<U>(
+        payload: TransportFabricRequestPayload<U>,
+        stub: ITransportFabricStub,
+        command: ITransportCommand<U>
+    ): ITransportFabricRequestStorage<U> {
         let item = this.requests.get(command.id) as ITransportFabricRequestStorage;
         if (!_.isNil(item)) {
             item.waitCount++;
@@ -218,7 +222,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         }
     }
 
-    protected executeCommand<U>(payload: TransportFabricRequestPayload<U>, command: ITransportCommand<U>): void {
+    protected executeCommand<U>(payload: TransportFabricRequestPayload<U>, stub: ITransportFabricStub, command: ITransportCommand<U>): void {
         let listener = this.listeners.get(command.name);
         if (_.isNil(listener)) {
             this.complete(command, new ExtendedError(`No listener for "${command.name}" command`));
@@ -227,7 +231,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         }
     }
 
-    protected createCommand<U>(stub: ITransportFabricStub, payload: ITransportFabricRequestPayload): ITransportCommand<U> {
+    protected createCommand<U>(payload: ITransportFabricRequestPayload, stub: ITransportFabricStub): ITransportCommand<U> {
         let command = this.getSettingsValue('commandFactory', this.defaultCreateCommandFactory)(payload);
         return new TransportFabricChaincodeCommandWrapper(payload, command, stub);
     }
