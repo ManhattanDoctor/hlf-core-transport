@@ -78,7 +78,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
             this.requests.delete(command.id);
             return;
         }
-        return this.executeCommand(command, request);
+        return this.executeCommand(payload, command, request);
     }
 
     public complete<U, V>(command: ITransportCommand<U>, result?: V | Error): void {
@@ -214,7 +214,11 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         }
     }
 
-    protected executeCommand<U, V>(command: ITransportCommand<U>, request: ITransportFabricRequestStorage<U, V>): Promise<ITransportFabricResponsePayload<V>> {
+    protected executeCommand<U, V>(
+        payload: TransportFabricRequestPayload<U>,
+        command: ITransportCommand<U>,
+        request: ITransportFabricRequestStorage<U, V>
+    ): Promise<ITransportFabricResponsePayload<V>> {
         let listener = this.listeners.get(command.name);
         if (_.isNil(listener)) {
             this.complete(command, new ExtendedError(`No listener for "${command.name}" command`));
