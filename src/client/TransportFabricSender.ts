@@ -4,14 +4,7 @@ import { ILogger } from '@ts-core/common/logger';
 import { ObservableData } from '@ts-core/common/observer';
 import { PromiseHandler } from '@ts-core/common/promise';
 import { Observable } from 'rxjs';
-import {
-    ITransportCommand,
-    ITransportCommandAsync,
-    ITransportEvent,
-    Transport,
-    TransportLogType,
-    TransportTimeoutError
-} from '@ts-core/common/transport';
+import { ITransportCommand, ITransportCommandAsync, ITransportEvent, Transport, TransportLogType, TransportTimeoutError } from '@ts-core/common/transport';
 import { DateUtil, ObjectUtil, TransformUtil, ValidateUtil } from '@ts-core/common/util';
 import { ContractEventListener } from 'fabric-network';
 import * as _ from 'lodash';
