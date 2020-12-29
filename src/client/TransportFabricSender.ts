@@ -16,6 +16,7 @@ import { ITransportFabricRequestOptions } from '../ITransportFabricRequestOption
 import { TransportFabricCommandOptions } from '../TransportFabricCommandOptions';
 import { TRANSPORT_FABRIC_METHOD } from '../constants';
 import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload';
+import { ITransportFabricConnectionSettings } from './ITransportFabricConnectionSettings';
 
 export class TransportFabricSender extends Transport<ITransportFabricConnectionSettings> {
     // --------------------------------------------------------------------------
@@ -174,6 +175,10 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
 
     public destroy(): void {
         super.destroy();
+        if (this.isDestroyed) {
+            return;
+        }
+
         this.disconnect();
         this.requests = null;
         this.contractEvents = null;
@@ -369,10 +374,4 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
     public get api(): FabricApiClient {
         return this._api;
     }
-}
-
-export interface ITransportFabricConnectionSettings extends IFabricConnectionSettings, ITransportSettings {
-    reconnectDelay?: number;
-    reconnectMaxAttempts?: number;
-    isExitApplicationOnDisconnect?: boolean;
 }

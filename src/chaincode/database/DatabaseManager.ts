@@ -102,6 +102,9 @@ export class DatabaseManager extends LoggerWrapper {
 
     public destroy(): void {
         super.destroy();
+        if (this.isDestroyed) {
+            return;
+        }
         this._stub = null;
     }
 
