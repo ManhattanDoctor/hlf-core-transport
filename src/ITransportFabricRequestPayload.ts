@@ -5,5 +5,7 @@ export interface ITransportFabricRequestPayload<U = any> {
     name: string;
     request?: U;
     options: ITransportFabricCommandOptions;
+
+    isReadonly: boolean;
     isNeedReply: boolean;
 }

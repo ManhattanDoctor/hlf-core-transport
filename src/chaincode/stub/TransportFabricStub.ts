@@ -17,10 +17,13 @@ export class TransportFabricStub implements ITransportFabricStub {
     protected _stub: ChaincodeStub;
 
     protected _requestId: string;
+    protected _transactionHash: string;
+    protected _transactionDate: Date;
 
     protected _userId: string;
     protected _userPublicKey: string;
 
+    protected options: ITransportFabricCommandOptions;
     protected transport: ITransportReceiver;
     protected eventsToDispatch: Array<ITransportEvent<any>>;
 
@@ -34,14 +37,39 @@ export class TransportFabricStub implements ITransportFabricStub {
         this._stub = stub;
         this._requestId = requestId;
 
+        this.options = options;
         this.transport = transport;
         this.eventsToDispatch = new Array();
 
-        if (!_.isNil(options)) {
-            this._userId = options.userId;
-            if (!_.isNil(options.signature)) {
-                this._userPublicKey = options.signature.publicKey;
-            }
+        if (!_.isNil(this.options)) {
+            this.commitOptionsProperties();
+        }
+        if (!_.isNil(this.stub)) {
+            this.commitStubProperties();
+        }
+    }
+
+    // --------------------------------------------------------------------------
+    //
+    //  Protected Methods
+    //
+    // --------------------------------------------------------------------------
+
+    protected commitStubProperties(): void {
+        this._transactionHash = this.stub.getTxID();
+
+        let item = this.stub.getTxTimestamp() as any;
+        if (ObjectUtil.hasOwnProperty(item, 'toDate')) {
+            this._transactionDate = item.toDate();
+        } else if (ObjectUtil.hasOwnProperties(item, ['seconds', 'nanos'])) {
+            this._transactionDate = new Date(item.seconds * DateUtil.MILISECONDS_SECOND + Math.round(item.nanos * DateUtil.MILISECONDS_NANOSECOND));
+        }
+    }
+
+    protected commitOptionsProperties(): void {
+        this._userId = this.options.userId;
+        if (!_.isNil(this.options.signature)) {
+            this._userPublicKey = this.options.signature.publicKey;
         }
     }
 
@@ -147,6 +175,7 @@ export class TransportFabricStub implements ITransportFabricStub {
 
         this._stub = null;
 
+        this.options = null;
         this.transport = null;
         this.eventsToDispatch = null;
     }
@@ -157,12 +186,16 @@ export class TransportFabricStub implements ITransportFabricStub {
     //
     // --------------------------------------------------------------------------
 
-    public get requestId(): string {
-        return this._requestId;
+    public get stub(): ChaincodeStub {
+        return this._stub;
     }
 
     public get userId(): string {
         return this._userId;
+    }
+
+    public get requestId(): string {
+        return this._requestId;
     }
 
     public get userPublicKey(): string {
@@ -170,24 +203,10 @@ export class TransportFabricStub implements ITransportFabricStub {
     }
 
     public get transactionHash(): string {
-        return !_.isNil(this.stub) ? this.stub.getTxID() : null;
+        return this._transactionHash;
     }
 
     public get transactionDate(): Date {
-        if (_.isNil(this.stub)) {
-            return null;
-        }
-        let item = this.stub.getTxTimestamp() as any;
-        if (ObjectUtil.hasOwnProperty(item, 'toDate')) {
-            return item.toDate();
-        }
-        if (ObjectUtil.hasOwnProperties(item, ['seconds', 'nanos'])) {
-            return new Date(item.seconds * DateUtil.MILISECONDS_SECOND + Math.round(item.nanos * DateUtil.MILISECONDS_NANOSECOND));
-        }
-        return null;
-    }
-
-    public get stub(): ChaincodeStub {
-        return this._stub;
+        return this._transactionDate;
     }
 }

@@ -66,6 +66,9 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
 
     @IsBoolean()
     public isNeedReply: boolean;
+
+    @IsBoolean()
+    public isReadonly: boolean;
 }
 
 // --------------------------------------------------------------------------

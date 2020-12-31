@@ -197,7 +197,7 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
 
         try {
             let request = this.createRequestOptions(command, options, isNeedReply);
-            let method = this.isCommandQuery(command) ? this.api.contract.evaluateTransaction : this.api.contract.submitTransaction;
+            let method = request.payload.isReadonly ? this.api.contract.evaluateTransaction : this.api.contract.submitTransaction;
 
             this.logCommand(command, isNeedReply ? TransportLogType.REQUEST_SENDED : TransportLogType.REQUEST_NO_REPLY);
             this.observer.next(new ObservableData(LoadableEvent.STARTED, command));
@@ -281,6 +281,7 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
     ): ITransportFabricRequestOptions<U> {
         let item = new TransportFabricRequestPayload<U>();
         item.options = TransformUtil.toClass(TransportFabricCommandOptions, options);
+        item.isReadonly = this.isCommandReadonly(command);
         item.isNeedReply = isNeedReply;
         ObjectUtil.copyProperties(command, item, ['id', 'name', 'request']);
 
@@ -294,7 +295,7 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
         return super.getCommandOptions(command, options) as ITransportFabricCommandOptions;
     }
 
-    protected isCommandQuery<U>(command: ITransportCommand<U>): boolean {
+    protected isCommandReadonly<U>(command: ITransportCommand<U>): boolean {
         if (ObjectUtil.hasOwnProperty(command, 'isQuery')) {
             return command['isQuery'] === true;
         }

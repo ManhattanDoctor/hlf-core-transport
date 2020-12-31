@@ -56,25 +56,19 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
     // --------------------------------------------------------------------------
 
     public async invoke<U = any, V = any>(chaincode: ChaincodeStub): Promise<ITransportFabricResponsePayload<V>> {
-        let command: ITransportCommand<U> = null;
-        let stub: ITransportFabricStub = null;
-        let payload: TransportFabricRequestPayload<U> = null;
+        let details: ITransportFabricChaincodeInvokeDetails<U> = null;
         try {
-            payload = TransportFabricRequestPayload.parse(chaincode);
-            stub = this.createStub(chaincode, payload, this);
-            command = this.createCommand(payload, stub);
-            if (!this.isNonSignedCommand(command)) {
-                await this.validateSignature(command, payload.options.signature);
-            }
+            details = await this.createInvokeDetails(chaincode);
         } catch (error) {
             error = ExtendedError.create(error);
-            this.warn(`Unable to create command: ${error.message}`);
-            return Promise.resolve(TransportFabricResponsePayload.fromError(!_.isNil(payload) ? payload.id : null, error));
+            this.warn(error.message);
+            return Promise.resolve(TransportFabricResponsePayload.fromError(!_.isNil(details.payload) ? details.payload.id : null, error));
         }
 
+        let { payload, stub, command } = details;
         this.logCommand(command, TransportLogType.REQUEST_RECEIVED);
-        let request = this.checkRequestStorage(payload, stub, command);
 
+        let request = this.checkRequestStorage(payload, stub, command);
         if (this.isRequestExpired(request)) {
             this.logCommand(command, TransportLogType.REQUEST_EXPIRED);
             this.warn(`Received "${command.name}" command with already expired timeout: ignore`);
@@ -234,6 +228,16 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         }
     }
 
+    protected async createInvokeDetails<U>(chaincode: ChaincodeStub): Promise<ITransportFabricChaincodeInvokeDetails<U>> {
+        let payload: ITransportFabricRequestPayload<U> = TransportFabricRequestPayload.parse(chaincode);
+        let stub: ITransportFabricStub = this.createStub(chaincode, payload, this);
+        let command: ITransportCommand<U> = this.createCommand(payload, stub);
+        if (!this.isNonSignedCommand(command)) {
+            await this.validateSignature(command, payload.options.signature);
+        }
+        return { payload, stub, command };
+    }
+
     protected createCommand<U>(payload: ITransportFabricRequestPayload, stub: ITransportFabricStub): ITransportCommand<U> {
         let command = this.getSettingsValue('commandFactory', this.defaultCreateCommandFactory)(payload);
         return new TransportFabricChaincodeCommandWrapper(payload, command, stub);
@@ -254,6 +258,12 @@ export interface ITransportFabricChaincodeSettings extends ITransportSettings {
 
     stubFactory?: <U>(stub: ChaincodeStub, payload: TransportFabricRequestPayload<U>, transport: ITransportReceiver) => ITransportFabricStub;
     commandFactory?: <U>(payload: ITransportFabricRequestPayload<U>) => ITransportCommand<U>;
+}
+
+export interface ITransportFabricChaincodeInvokeDetails<U> {
+    stub: ITransportFabricStub;
+    command: ITransportCommand<U>;
+    payload: ITransportFabricRequestPayload<U>;
 }
 
 interface ITransportFabricRequestStorage<U = any, V = any> extends ITransportRequestStorage {

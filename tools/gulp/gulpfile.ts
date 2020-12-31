@@ -70,18 +70,25 @@ const packageClean = async (): Promise<void> => {
 
 const packageCompile = async (): Promise<void> => {
     await new Promise(resolve => {
-        project.src().pipe(project()).pipe(dest(output)).on('finish', resolve);
+        project
+            .src()
+            .pipe(project())
+            .pipe(dest(output))
+            .on('finish', resolve);
     });
 };
 
+const packageCommit = async (): Promise<void> => {};
 const packageBuild = async (): Promise<void> => {
     // Update dependencies or install it
     if (await isFileExist(`package-lock.json`)) {
-        await run(`npm update`)();
+        // await run(`npm update`)();
     } else {
-        await run(`npm install`)();
+        // await run(`npm install`)();
     }
 
+    // Commit project
+    await packageCommit();
     // Remove output directory
     await del(output, { force: true });
     // Format and fix code
