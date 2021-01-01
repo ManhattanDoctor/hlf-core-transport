@@ -78,13 +78,15 @@ const packageCompile = async (): Promise<void> => {
     });
 };
 
-const packageCommit = async (): Promise<void> => {};
+const packageCommit = async (): Promise<void> => {
+    await run(`git commit -a -m "auto commit"`)();
+};
 const packageBuild = async (): Promise<void> => {
     // Update dependencies or install it
     if (await isFileExist(`package-lock.json`)) {
-        // await run(`npm update`)();
+        await run(`npm update`)();
     } else {
-        // await run(`npm install`)();
+        await run(`npm install`)();
     }
 
     // Commit project
