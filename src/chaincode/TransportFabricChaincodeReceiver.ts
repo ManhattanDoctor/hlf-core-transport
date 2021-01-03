@@ -238,7 +238,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
         return { payload, stub, command };
     }
 
-    protected createCommand<U>(payload: ITransportFabricRequestPayload, stub: ITransportFabricStub): ITransportCommand<U> {
+    protected createCommand<U>(payload: ITransportFabricRequestPayload<U>, stub: ITransportFabricStub): ITransportCommand<U> {
         let command = this.getSettingsValue('commandFactory', this.defaultCreateCommandFactory)(payload);
         return new TransportFabricChaincodeCommandWrapper(payload, command, stub);
     }

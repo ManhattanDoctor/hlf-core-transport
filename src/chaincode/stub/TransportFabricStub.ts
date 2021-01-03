@@ -172,8 +172,8 @@ export class TransportFabricStub extends Destroyable implements ITransportFabric
         return {
             items: await this.loadKV(response.iterator),
             pageSize: request.pageSize,
-            pageBookmark: response.metadata.bookmark,
-            isAllLoaded: response.metadata.fetched_records_count < request.pageSize
+            isAllLoaded: response.metadata.fetched_records_count < request.pageSize,
+            pageBookmark: response.metadata.bookmark
         };
     }
 
