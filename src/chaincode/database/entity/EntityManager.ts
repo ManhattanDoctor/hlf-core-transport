@@ -1,9 +1,9 @@
 import { ILogger } from '@ts-core/common/logger';
 import * as _ from 'lodash';
 import { IPaginableBookmark, IPaginationBookmark, getUid } from '@ts-core/common/dto';
-import { DatabaseManager, KeyValue } from '../DatabaseManager';
+import { DatabaseManager } from '../DatabaseManager';
 import { TransformUtil } from '@ts-core/common/util';
-import { ITransportFabricStub } from '../../stub';
+import { IKeyValue, ITransportFabricStub } from '../../stub';
 import { UID, IUIDable } from '@ts-core/common/dto';
 
 export abstract class EntityManager<U extends IUIDable> extends DatabaseManager {
@@ -36,7 +36,7 @@ export abstract class EntityManager<U extends IUIDable> extends DatabaseManager 
         return options;
     }
 
-    protected async parseFindResult<T = any>(result: Array<KeyValue>, options: IFindOptions<T>): Promise<Array<T | string>> {
+    protected async parseFindResult<T = any>(result: Array<IKeyValue>, options: IFindOptions<T>): Promise<Array<T | string>> {
         let items = result.map(item => item.value);
         items = items.filter(item => !_.isNil(item));
         return _.isNil(options.transform) ? items : await Promise.all(items.map(item => options.transform(item)));
