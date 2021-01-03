@@ -1,7 +1,8 @@
 import { ClassType } from 'class-transformer/ClassTransformer';
-import { ChaincodeStub } from 'fabric-shim';
+import { ChaincodeStub, Iterators } from 'fabric-shim';
 import { IDestroyable } from '@ts-core/common';
 import { ITransportEvent } from '@ts-core/common/transport';
+import { IPageBookmark, IPaginationBookmark } from '@ts-core/common/dto';
 
 export interface ITransportFabricStub extends IDestroyable {
     readonly stub: ChaincodeStub;
@@ -13,6 +14,9 @@ export interface ITransportFabricStub extends IDestroyable {
     readonly transactionHash: string;
     readonly transactionDate: Date;
 
+    loadKV(iterator: Iterators.StateQueryIterator): Promise<Array<IKeyValue>>;
+    getPaginatedKV(request: IPageBookmark, start: string, finish: string): Promise<IPaginationBookmark<IKeyValue>>;
+
     getState<U>(key: string, type?: ClassType<U>, isNeedValidate?: boolean): Promise<U>;
     getStateRaw(key: string): Promise<string>;
 
@@ -23,4 +27,9 @@ export interface ITransportFabricStub extends IDestroyable {
     removeState(key: string): Promise<void>;
 
     dispatch<T>(event: ITransportEvent<T>): Promise<void>;
+}
+
+export interface IKeyValue {
+    key: string;
+    value?: string;
 }

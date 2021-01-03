@@ -2,12 +2,14 @@ import { TransformUtil, ValidateUtil, ObjectUtil, DateUtil } from '@ts-core/comm
 import { ClassType } from 'class-transformer/ClassTransformer';
 import { ChaincodeStub, Iterators, StateQueryResponse } from 'fabric-shim';
 import * as _ from 'lodash';
-import { ITransportFabricStub } from './ITransportFabricStub';
+import { IKeyValue, ITransportFabricStub } from './ITransportFabricStub';
 import { ITransportEvent, ITransportReceiver } from '@ts-core/common/transport';
 import { ITransportFabricCommandOptions } from '../../ITransportFabricCommandOptions';
 import { TRANSPORT_CHAINCODE_EVENT } from '../../constants';
+import { Destroyable } from '@ts-core/common';
+import { IPageBookmark, IPaginationBookmark } from '@ts-core/common/dto';
 
-export class TransportFabricStub implements ITransportFabricStub {
+export class TransportFabricStub extends Destroyable implements ITransportFabricStub {
     // --------------------------------------------------------------------------
     //
     //  Properties
@@ -34,6 +36,7 @@ export class TransportFabricStub implements ITransportFabricStub {
     // --------------------------------------------------------------------------
 
     constructor(stub: ChaincodeStub, requestId: string, options: ITransportFabricCommandOptions, transport: ITransportReceiver) {
+        super();
         this._stub = stub;
         this._requestId = requestId;
 
@@ -144,6 +147,38 @@ export class TransportFabricStub implements ITransportFabricStub {
 
     // --------------------------------------------------------------------------
     //
+    //  Public Key Value
+    //
+    // --------------------------------------------------------------------------
+
+    public async loadKV(iterator: Iterators.StateQueryIterator): Promise<Array<IKeyValue>> {
+        let items = [];
+        while (true) {
+            let response = await iterator.next();
+            let item = response.value;
+            if (!_.isNil(item) && !_.isNil(item.key)) {
+                items.push({ key: item.key, value: !_.isNil(item.value) ? item.value.toString(TransformUtil.ENCODING) : null });
+            }
+            if (response.done) {
+                await iterator.close();
+                break;
+            }
+        }
+        return items;
+    }
+
+    public async getPaginatedKV(request: IPageBookmark, start: string, finish: string): Promise<IPaginationBookmark<IKeyValue>> {
+        let response = await this.stub.getStateByRangeWithPagination(start, finish, request.pageSize, request.pageBookmark);
+        return {
+            items: await this.loadKV(response.iterator),
+            pageSize: request.pageSize,
+            pageBookmark: response.metadata.bookmark,
+            isAllLoaded: response.metadata.fetched_records_count < request.pageSize
+        };
+    }
+
+    // --------------------------------------------------------------------------
+    //
     //  Public Event Methods
     //
     // --------------------------------------------------------------------------
@@ -171,10 +206,14 @@ export class TransportFabricStub implements ITransportFabricStub {
     }
 
     public destroy(): void {
+        super.destroy();
+        if (this.isDestroyed) {
+            return;
+        }
+
         this.dispatchEvents();
 
         this._stub = null;
-
         this.options = null;
         this.transport = null;
         this.eventsToDispatch = null;

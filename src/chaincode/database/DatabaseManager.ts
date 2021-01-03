@@ -1,9 +1,7 @@
 import { ILogger, LoggerWrapper } from '@ts-core/common/logger';
 import * as _ from 'lodash';
-import { Iterators } from 'fabric-shim';
 import { IPaginationBookmark, IPageBookmark } from '@ts-core/common/dto';
-import { TransformUtil } from '@ts-core/common/util';
-import { ITransportFabricStub } from '../stub';
+import { IKeyValue, ITransportFabricStub } from '../stub';
 
 export class DatabaseManager extends LoggerWrapper {
     // --------------------------------------------------------------------------
@@ -39,22 +37,6 @@ export class DatabaseManager extends LoggerWrapper {
     //
     // --------------------------------------------------------------------------
 
-    private async loadKV(iterator: Iterators.StateQueryIterator): Promise<Array<KeyValue>> {
-        let items = [];
-        while (true) {
-            let response = await iterator.next();
-            let item = response.value;
-            if (!_.isNil(item) && !_.isNil(item.key)) {
-                items.push({ key: item.key, value: !_.isNil(item.value) ? item.value.toString(TransformUtil.ENCODING) : null });
-            }
-            if (response.done) {
-                await iterator.close();
-                break;
-            }
-        }
-        return items;
-    }
-
     public getFinish(start: string): string {
         return start + DatabaseManager.LAST_KEY;
     }
@@ -65,11 +47,11 @@ export class DatabaseManager extends LoggerWrapper {
     //
     // --------------------------------------------------------------------------
 
-    public async getKV(start: string, finish?: string): Promise<Array<KeyValue>> {
+    public async getKV(start: string, finish?: string): Promise<Array<IKeyValue>> {
         if (_.isNil(finish)) {
             finish = this.getFinish(start);
         }
-        return this.loadKV(await this.stub.stub.getStateByRange(start, finish));
+        return this.stub.loadKV(await this.stub.stub.getStateByRange(start, finish));
     }
 
     public async removeKV(start: string, finish?: string): Promise<void> {
@@ -78,18 +60,11 @@ export class DatabaseManager extends LoggerWrapper {
         await Promise.all(kv.map(item => this.stub.removeState(item.value)));
     }
 
-    public async getPaginatedKV(request: IPageBookmark, start: string, finish?: string): Promise<IPaginationBookmark<KeyValue>> {
+    public async getPaginatedKV(request: IPageBookmark, start: string, finish?: string): Promise<IPaginationBookmark<IKeyValue>> {
         if (_.isNil(finish)) {
             finish = this.getFinish(start);
         }
-
-        let response = await this.stub.stub.getStateByRangeWithPagination(start, finish, request.pageSize, request.pageBookmark);
-        return {
-            items: await this.loadKV(response.iterator),
-            pageSize: request.pageSize,
-            pageBookmark: response.metadata.bookmark,
-            isAllLoaded: response.metadata.fetched_records_count < request.pageSize
-        };
+        return this.stub.getPaginatedKV(request, start, finish);
     }
 
     public async getKeys(start: string, finish?: string): Promise<Array<string>> {
@@ -117,9 +92,4 @@ export class DatabaseManager extends LoggerWrapper {
     public get stub(): ITransportFabricStub {
         return this._stub;
     }
-}
-
-export interface KeyValue {
-    key: string;
-    value?: string;
 }
