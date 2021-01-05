@@ -1,18 +1,20 @@
-import { ITransportCommand, ITransportSettings } from '@ts-core/common/transport';
+import { ITransportCommand, ITransportReceiver, ITransportSettings } from '@ts-core/common/transport';
 import { ChaincodeStub } from 'fabric-shim';
 import * as _ from 'lodash';
+
 import { ITransportCryptoManager } from '@ts-core/common/transport/crypto';
 import { ExtendedError } from '@ts-core/common/error';
 import { TransportFabricStubWrapper } from './TransportFabricStubWrapper';
 import { TransportFabricStubBatch } from './TransportFabricStubBatch';
-import { TransformUtil } from '@ts-core/common/util';
+import { DateUtil, TransformUtil } from '@ts-core/common/util';
 import { ITransportFabricChaincodeBatchDtoResponse } from './ITransportFabricChaincodeBatchDtoResponse';
+import { DatabaseManager } from '../database';
 import { TransportFabricChaincodeReceiver } from '../TransportFabricChaincodeReceiver';
 import { TransportFabricRequestPayload } from '../../TransportFabricRequestPayload';
 import { ITransportFabricStub } from '../stub';
-import { DatabaseManager } from '../database';
 import { ITransportFabricRequestPayload } from '../../ITransportFabricRequestPayload';
 import { TRANSPORT_FABRIC_COMMAND_BATCH_NAME } from '../../constants';
+import { TransportFabricResponsePayload } from '../../TransportFabricResponsePayload';
 
 export class TransportFabricChaincodeReceiverBatch extends TransportFabricChaincodeReceiver {
     // --------------------------------------------------------------------------
@@ -29,35 +31,61 @@ export class TransportFabricChaincodeReceiverBatch extends TransportFabricChainc
     //
     // --------------------------------------------------------------------------
 
-    protected async executeCommand<U>(payload: TransportFabricRequestPayload<U>, stub: ITransportFabricStub, command: ITransportCommand<U>): Promise<void> {
+    protected async executeCommand<U>(
+        originalStub: ChaincodeStub,
+        payload: TransportFabricRequestPayload<U>,
+        stub: ITransportFabricStub,
+        command: ITransportCommand<U>
+    ): Promise<void> {
+        await this.executeBatch(originalStub, stub);
+
         if (payload.isReadonly) {
-            return super.executeCommand(payload, stub, command);
+            return super.executeCommand(originalStub, payload, stub, command);
         }
-        this.complete(command, this.isCommandBatch(payload) ? await this.executeBatch(stub) : await this.addToBatch(payload, stub, command));
+        this.complete(command, this.isCommandBatch(payload) ? await this.executeBatch(originalStub, stub) : await this.addToBatch(payload, stub, command));
     }
 
-    protected async executeBatch<U>(stub: ITransportFabricStub): Promise<ITransportFabricChaincodeBatchDtoResponse> {
+    protected async executeBatch<U>(originalStub: ChaincodeStub, stub: ITransportFabricStub): Promise<ITransportFabricChaincodeBatchDtoResponse> {
         let database = new DatabaseManager(this.logger, stub);
+        let items = await database.getKV(TransportFabricChaincodeReceiverBatch.PREFIX);
+
+        let wrapper = new TransportFabricStubWrapper(originalStub);
         let response = {} as ITransportFabricChaincodeBatchDtoResponse;
-
-        for (let item of await database.getKV(TransportFabricChaincodeReceiverBatch.PREFIX)) {
-            let result = null;
-
+        items = [items[0]];
+        for (let item of items) {
+            let result = {};
             try {
-                let payload = TransformUtil.toClass<ITransportFabricRequestPayload<U>>(TransportFabricRequestPayload, TransformUtil.toJSON(item.value));
-                let batchStub = new TransportFabricStubBatch(new TransportFabricStubWrapper(stub.stub), payload.id, payload.options, this);
-                let command = this.createCommand(payload, batchStub);
-                let request = this.checkRequestStorage(payload, batchStub, command);
-                super.executeCommand(payload, batchStub, command);
-                result = (await request.handler.promise).response;
+                result = await this.executeBatchedCommand(
+                    item.key,
+                    originalStub,
+                    wrapper,
+                    TransformUtil.toClass<ITransportFabricRequestPayload<U>>(TransportFabricRequestPayload, TransformUtil.toJSON(item.value))
+                );
             } catch (error) {
                 error = ExtendedError.create(error);
-                this.warn(`Error to execute batched command: ${error.message}`);
+                this.error(`Unable to execute batched command: ${error.message}`);
                 result = TransformUtil.fromClass(error);
             }
-            response[this.fromBatchKey(item.key)] = result;
+            response[this.batchKeyToHash(item.key)] = result;
+            await stub.removeState(item.key);
         }
+        wrapper.destroy();
+        console.log(response);
         return response;
+    }
+
+    protected async executeBatchedCommand<U>(
+        batchKey: string,
+        chaincodeStub: ChaincodeStub,
+        wrapper: TransportFabricStubWrapper,
+        payload: ITransportFabricRequestPayload<U>
+    ): Promise<TransportFabricResponsePayload<U>> {
+        let batchStub = new TransportFabricStubBatch(this.batchKeyToHash(batchKey), this.batchKeyToDate(batchKey), wrapper, payload);
+        let command = this.createCommand(payload, batchStub);
+        let request = this.checkRequestStorage(payload, batchStub, command);
+        await super.executeCommand(chaincodeStub, payload, batchStub, command);
+        batchStub.destroy();
+        return request.handler.promise;
     }
 
     protected async addToBatch<U>(payload: TransportFabricRequestPayload<U>, stub: ITransportFabricStub, command: ITransportCommand<U>): Promise<string> {
@@ -65,21 +93,26 @@ export class TransportFabricChaincodeReceiverBatch extends TransportFabricChainc
         return stub.transactionHash;
     }
 
+    protected isCommandBatch<U>(payload: TransportFabricRequestPayload<U>): boolean {
+        return payload.name === TRANSPORT_FABRIC_COMMAND_BATCH_NAME;
+    }
+
+    // --------------------------------------------------------------------------
+    //
+    //  Batch Key Methods
+    //
+    // --------------------------------------------------------------------------
+
+    protected batchKeyToHash(item: string): string {
+        return item.split('/')[2];
+    }
+    protected batchKeyToDate(item: string): Date {
+        return DateUtil.getDate(Number(item.split('/')[1]));
+    }
+
     protected toBatchKey<U>(date: Date, hash: string, command: ITransportCommand<U>): string {
         let time = date.getTime();
         return `${TransportFabricChaincodeReceiverBatch.PREFIX}/${_.padStart(time.toString(), 14, '0')}/${hash}/${command.id}`;
-    }
-
-    protected fromBatchKey(item: string): string {
-        let items = item.split('/');
-        if (items.length < 3) {
-            throw new Error(`Invalid batch key "${item}"`);
-        }
-        return item.split('/')[2];
-    }
-
-    protected isCommandBatch<U>(payload: TransportFabricRequestPayload<U>): boolean {
-        return payload.name === TRANSPORT_FABRIC_COMMAND_BATCH_NAME;
     }
 }
 

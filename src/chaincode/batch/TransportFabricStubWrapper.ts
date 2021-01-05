@@ -1,9 +1,7 @@
-import { ExtendedError } from '@ts-core/common/error';
-import { ITransportEvent } from '@ts-core/common/transport';
 import { ArrayUtil } from '@ts-core/common/util';
-import { ChaincodeStub } from 'fabric-shim';
+import { ChaincodeStub, Iterators } from 'fabric-shim';
 import * as _ from 'lodash';
-import { TransportFabricStub } from '../stub';
+import { IKeyValue, TransportFabricStub } from '../stub';
 
 export class TransportFabricStubWrapper extends TransportFabricStub {
     // --------------------------------------------------------------------------
@@ -55,6 +53,18 @@ export class TransportFabricStubWrapper extends TransportFabricStub {
         this.keysToRemove = [];
     }
 
+    // --------------------------------------------------------------------------
+    //
+    //  Public Override Methods
+    //
+    // --------------------------------------------------------------------------
+
+    public async loadKV(iterator: Iterators.StateQueryIterator): Promise<Array<IKeyValue>> {
+        let items = await super.loadKV(iterator);
+        items = items.filter(item => !this.isKeyRemoved(item.key));
+        return items;
+    }
+
     public async getStateRaw(key: string): Promise<string> {
         if (this.isKeyRemoved(key)) {
             return null;
@@ -81,16 +91,14 @@ export class TransportFabricStubWrapper extends TransportFabricStub {
         this.state.delete(key);
     }
 
-    public dispatch<T>(event: ITransportEvent<T>): Promise<void> {
-        throw new ExtendedError('Method is not supported');
-    }
-
     public destroy(): void {
         super.destroy();
+        if (this.isDestroyed) {
+            return;
+        }
 
         this.state.clear();
         this.state = null;
-
         this.keysToRemove = null;
     }
 }
