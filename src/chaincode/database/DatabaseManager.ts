@@ -51,7 +51,7 @@ export class DatabaseManager extends LoggerWrapper {
         if (_.isNil(finish)) {
             finish = this.getFinish(start);
         }
-        return this.stub.loadKV(await this.stub.stub.getStateByRange(start, finish));
+        return this.stub.loadKV(await this.stub.getStateByRange(start, finish));
     }
 
     public async removeKV(start: string, finish?: string): Promise<void> {

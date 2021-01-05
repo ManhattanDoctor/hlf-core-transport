@@ -9,6 +9,7 @@ import { ITransportFabricRequestPayload } from './ITransportFabricRequestPayload
 import { TransportFabricChaincodeReceiver } from './chaincode';
 import { TransportFabricCommandOptions } from './TransportFabricCommandOptions';
 import { TransportFabricStub, ITransportFabricStub, ITransportFabricStubHolder } from './chaincode/stub';
+import * as _ from 'lodash';
 
 export class TransportFabricRequestPayload<U = any> implements ITransportFabricRequestPayload<U> {
     // --------------------------------------------------------------------------
@@ -104,8 +105,10 @@ class TransportCommandFabricAsyncImpl<U, V> extends TransportCommandAsync<U, V> 
     // --------------------------------------------------------------------------
 
     public destroy(): void {
-        this._stub.destroy();
-        this._stub = null;
+        if (!_.isNil(this.stub)) {
+            this.stub.destroy();
+            this._stub = null;
+        }
     }
 
     // --------------------------------------------------------------------------

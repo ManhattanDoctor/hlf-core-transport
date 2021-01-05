@@ -1,11 +1,11 @@
 import { ClassType } from 'class-transformer/ClassTransformer';
-import { ChaincodeStub, Iterators } from 'fabric-shim';
+import { ChaincodeStub, Iterators, StateQueryResponse } from 'fabric-shim';
 import { IDestroyable } from '@ts-core/common';
 import { ITransportEvent } from '@ts-core/common/transport';
 import { IPageBookmark, IPaginationBookmark } from '@ts-core/common/dto';
 
 export interface ITransportFabricStub extends IDestroyable {
-    readonly stub: ChaincodeStub;
+    // readonly stub: ChaincodeStub;
 
     readonly userId: string;
     readonly userPublicKey: string;
@@ -19,6 +19,14 @@ export interface ITransportFabricStub extends IDestroyable {
 
     getState<U>(key: string, type?: ClassType<U>, isNeedValidate?: boolean): Promise<U>;
     getStateRaw(key: string): Promise<string>;
+
+    getStateByRange(startKey: string, endKey: string): Promise<Iterators.StateQueryIterator>;
+    getStateByRangeWithPagination(
+        startKey: string,
+        endKey: string,
+        pageSize: number,
+        bookmark?: string
+    ): Promise<StateQueryResponse<Iterators.StateQueryIterator>>;
 
     putState<U>(key: string, value: U, isNeedValidate?: boolean, isNeedTransform?: boolean): Promise<U>;
     putStateRaw(key: string, value: string): Promise<void>;
