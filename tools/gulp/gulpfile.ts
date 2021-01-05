@@ -95,8 +95,6 @@ const packageCommit = async (): Promise<void> => {
 const packageBuild = async (): Promise<void> => {
     // Update dependencies or install it
     await packageUpdateDependencies();
-    // Commit project
-    await packageCommit();
     // Remove output directory
     await del(output, { force: true });
     // Format and fix code
@@ -119,6 +117,8 @@ const packageLink = async (): Promise<void> => {
 const packagePublish = async (type: 'patch' | 'minor' | 'major'): Promise<void> => {
     // Build package or copy files
     await packageBuild();
+    // Commit project
+    await packageCommit();
     // Update version of package.js
     await run(`npm --prefix ${projectDirectory} version ${type}`)();
     // Copy package.js

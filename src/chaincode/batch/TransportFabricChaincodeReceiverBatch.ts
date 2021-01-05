@@ -51,7 +51,7 @@ export class TransportFabricChaincodeReceiverBatch extends TransportFabricChainc
 
         let wrapper = new TransportFabricStubWrapper(originalStub);
         let response = {} as ITransportFabricChaincodeBatchDtoResponse;
-        items = [items[0]];
+
         for (let item of items) {
             let result = {};
             try {
