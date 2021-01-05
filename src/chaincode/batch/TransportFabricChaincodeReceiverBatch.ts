@@ -32,24 +32,22 @@ export class TransportFabricChaincodeReceiverBatch extends TransportFabricChainc
     // --------------------------------------------------------------------------
 
     protected async executeCommand<U>(
-        originalStub: ChaincodeStub,
+        stubOriginal: ChaincodeStub,
         payload: TransportFabricRequestPayload<U>,
         stub: ITransportFabricStub,
         command: ITransportCommand<U>
     ): Promise<void> {
-        await this.executeBatch(originalStub, stub);
-
         if (payload.isReadonly) {
-            return super.executeCommand(originalStub, payload, stub, command);
+            return super.executeCommand(stubOriginal, payload, stub, command);
         }
-        this.complete(command, this.isCommandBatch(payload) ? await this.executeBatch(originalStub, stub) : await this.addToBatch(payload, stub, command));
+        this.complete(command, this.isCommandBatch(payload) ? await this.executeBatch(stubOriginal, stub) : await this.addToBatch(payload, stub, command));
     }
 
-    protected async executeBatch<U>(originalStub: ChaincodeStub, stub: ITransportFabricStub): Promise<ITransportFabricChaincodeBatchDtoResponse> {
+    protected async executeBatch<U>(stubOriginal: ChaincodeStub, stub: ITransportFabricStub): Promise<ITransportFabricChaincodeBatchDtoResponse> {
         let database = new DatabaseManager(this.logger, stub);
         let items = await database.getKV(TransportFabricChaincodeReceiverBatch.PREFIX);
 
-        let wrapper = new TransportFabricStubWrapper(originalStub);
+        let wrapper = new TransportFabricStubWrapper(stubOriginal);
         let response = {} as ITransportFabricChaincodeBatchDtoResponse;
 
         for (let item of items) {
@@ -57,7 +55,7 @@ export class TransportFabricChaincodeReceiverBatch extends TransportFabricChainc
             try {
                 result = await this.executeBatchedCommand(
                     item.key,
-                    originalStub,
+                    stubOriginal,
                     wrapper,
                     TransformUtil.toClass<ITransportFabricRequestPayload<U>>(TransportFabricRequestPayload, TransformUtil.toJSON(item.value))
                 );
