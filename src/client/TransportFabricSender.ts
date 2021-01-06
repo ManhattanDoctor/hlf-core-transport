@@ -174,10 +174,10 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
     }
 
     public destroy(): void {
-        super.destroy();
         if (this.isDestroyed) {
             return;
         }
+        super.destroy();
 
         this.disconnect();
         this.requests = null;

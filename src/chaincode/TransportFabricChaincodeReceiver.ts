@@ -145,10 +145,10 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
     }
 
     public destroy(): void {
-        super.destroy();
         if (this.isDestroyed) {
             return;
         }
+        super.destroy();
 
         this.requests.forEach((item: ITransportFabricRequestStorage) => item.handler.reject(new ExtendedError(`Chaincode destroyed`)));
         this.requests.clear();

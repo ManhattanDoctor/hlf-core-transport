@@ -206,10 +206,10 @@ export class TransportFabricStub extends Destroyable implements ITransportFabric
     }
 
     public destroy(): void {
-        super.destroy();
         if (this.isDestroyed) {
             return;
         }
+        super.destroy();
 
         this.dispatchEvents();
 

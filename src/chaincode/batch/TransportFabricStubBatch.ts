@@ -80,10 +80,11 @@ export class TransportFabricStubBatch extends TransportFabricStub {
     // --------------------------------------------------------------------------
 
     public destroy(): void {
-        super.destroy();
         if (this.isDestroyed) {
             return;
         }
+        super.destroy();
+
         this.wrapper = null;
     }
 }

@@ -92,10 +92,10 @@ export class TransportFabricStubWrapper extends TransportFabricStub {
     }
 
     public destroy(): void {
-        super.destroy();
         if (this.isDestroyed) {
             return;
         }
+        super.destroy();
 
         this.state.clear();
         this.state = null;
