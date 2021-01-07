@@ -6,7 +6,7 @@ import { PromiseHandler } from '@ts-core/common/promise';
 import { Observable } from 'rxjs';
 import { ITransportCommand, ITransportCommandAsync, ITransportEvent, Transport, TransportLogType, TransportTimeoutError } from '@ts-core/common/transport';
 import { DateUtil, ObjectUtil, TransformUtil, ValidateUtil } from '@ts-core/common/util';
-import { ContractEventListener } from 'fabric-network';
+import { ContractEventListener, Transaction } from 'fabric-network';
 import * as _ from 'lodash';
 import { IFabricConnectionSettings, FabricApiClient } from '@hlf-core/api';
 import { ITransportSettings } from '@ts-core/common/transport';
@@ -197,26 +197,33 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
 
         try {
             let request = this.createRequestOptions(command, options, isNeedReply);
-            let method = request.payload.isReadonly ? this.api.contract.evaluateTransaction : this.api.contract.submitTransaction;
-
-            this.logCommand(command, isNeedReply ? TransportLogType.REQUEST_SENDED : TransportLogType.REQUEST_NO_REPLY);
-            this.observer.next(new ObservableData(LoadableEvent.STARTED, command));
-
-            let response = await method.call(this.api.contract, request.method, TransformUtil.fromJSON(TransformUtil.fromClass(request.payload)));
+            let response = await this.transactionSend(this.api.contract.createTransaction(request.method), command, request);
             if (this.isCommandAsync(command) && isNeedReply) {
                 this.responseMessageReceived(command.id, response);
             }
         } catch (error) {
-            error = ExtendedError.instanceOf(error) ? error : TransportFabricSender.parseEndorsementError(command, error);
-
-            this.error(error);
-            if (!this.isCommandAsync(command)) {
-                return;
-            }
-            command.response(error);
-            this.logCommand(command, TransportLogType.RESPONSE_RECEIVED);
-            this.commandProcessed(command);
+            this.parseTransactionError(command, error);
         }
+    }
+
+    protected async transactionSend<U>(transaction: Transaction, command: ITransportCommand<U>, request: ITransportFabricRequestOptions<U>): Promise<any> {
+        this.logCommand(command, request.payload.isNeedReply ? TransportLogType.REQUEST_SENDED : TransportLogType.REQUEST_NO_REPLY);
+        this.observer.next(new ObservableData(LoadableEvent.STARTED, command));
+
+        let method = request.payload.isReadonly ? transaction.evaluate : transaction.submit;
+        return method.call(TransformUtil.fromJSON(TransformUtil.fromClass(request.payload)));
+    }
+
+    protected async parseTransactionError<U>(command: ITransportCommand<U>, error: Error): Promise<any> {
+        error = ExtendedError.instanceOf(error) ? error : TransportFabricSender.parseEndorsementError(command, error);
+
+        this.error(error);
+        if (!this.isCommandAsync(command)) {
+            return;
+        }
+        command.response(error);
+        this.logCommand(command, TransportLogType.RESPONSE_RECEIVED);
+        this.commandProcessed(command);
     }
 
     protected async eventSend<U>(event: ITransportEvent<U>): Promise<void> {
