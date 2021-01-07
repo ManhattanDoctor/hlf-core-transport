@@ -215,7 +215,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         this.observer.next(new ObservableData(LoadableEvent.STARTED, command));
 
         let method = request.payload.isReadonly ? transaction.evaluate : transaction.submit;
-        return method.call(TransformUtil.fromJSON(TransformUtil.fromClass(request.payload)));
+        return method.call(transaction, TransformUtil.fromJSON(TransformUtil.fromClass(request.payload)));
     }
 
     protected async parseTransactionError<U>(command: ITransportCommand<U>, error: Error): Promise<any> {
