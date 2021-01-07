@@ -126,7 +126,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         }
     }
 
-    public get getSettings(): ITransportFabricConnectionSettings {
+    public getSettings(): ITransportFabricConnectionSettings {
         return this.settings;
     }
 
