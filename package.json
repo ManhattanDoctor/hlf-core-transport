@@ -9,7 +9,7 @@
     },
     "license": "ISC",
     "dependencies": {
-        "@hlf-core/api": "^1.0.7",
+        "@hlf-core/api": "^1.0.9",
         "@ts-core/common": "^1.0.148",
         "fabric-client": "1.4.7",
         "fabric-network": "1.4.7",

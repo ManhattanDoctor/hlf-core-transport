@@ -18,7 +18,7 @@ import { TRANSPORT_FABRIC_METHOD } from '../constants';
 import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload';
 import { ITransportFabricConnectionSettings } from './ITransportFabricConnectionSettings';
 
-export class TransportFabricSender extends Transport<ITransportFabricConnectionSettings> {
+export class TransportFabricSender<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends Transport<T> {
     // --------------------------------------------------------------------------
     //
     //  Static Methods
@@ -64,7 +64,7 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
     //
     // --------------------------------------------------------------------------
 
-    constructor(logger: ILogger, settings: ITransportFabricConnectionSettings, context?: string) {
+    constructor(logger: ILogger, settings: T, context?: string) {
         super(logger, settings, context);
 
         this._api = new FabricApiClient(logger, settings);
@@ -124,6 +124,10 @@ export class TransportFabricSender extends Transport<ITransportFabricConnectionS
             this.log(`Exit application: disconnected`);
             process.exit(0);
         }
+    }
+
+    public get getSettings(): ITransportFabricConnectionSettings {
+        return this.settings;
     }
 
     // --------------------------------------------------------------------------
