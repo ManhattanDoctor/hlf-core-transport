@@ -7,15 +7,19 @@ import { IFabricBlock, IFabricTransaction } from '@hlf-core/api';
 import { ITransportFabricEvent } from './ITransportFabricEvent';
 import { TRANSPORT_FABRIC_METHOD, TRANSPORT_CHAINCODE_EVENT } from '../../constants';
 
-export class TransportFabricBlockParser {
+export class TransportFabricBlockParser<
+    U extends ITransportFabricTransaction = ITransportFabricTransaction,
+    V extends ITransportFabricEvent = ITransportFabricEvent,
+    T extends ITransportFabricBlock<U, V> = ITransportFabricBlock<U, V>
+> {
     // --------------------------------------------------------------------------
     //
     //  Public Methods
     //
     // --------------------------------------------------------------------------
 
-    public async parse(block: IFabricBlock): Promise<ITransportFabricBlock> {
-        let item: ITransportFabricBlock = {} as any;
+    public async parse(block: IFabricBlock): Promise<T> {
+        let item = {} as any;
         item.hash = block.hash;
         item.number = block.number;
         item.createdDate = block.createdDate;
@@ -44,7 +48,7 @@ export class TransportFabricBlockParser {
         return item;
     }
 
-    public parseTransaction(data: IFabricTransaction): ITransportFabricTransaction {
+    public parseTransaction(data: IFabricTransaction): U {
         let item = this.parseTransactionBlockData(data.transactionEnvelope);
         item.validationCode = data.validationCode;
         return item;
@@ -56,14 +60,14 @@ export class TransportFabricBlockParser {
     //
     // --------------------------------------------------------------------------
 
-    protected parseTransactionBlockData(data: BlockData): ITransportFabricTransaction {
+    protected parseTransactionBlockData(data: BlockData): U {
         if (_.isNil(data) || _.isNil(data.payload) || _.isNil(data.payload.header) || _.isNil(data.payload.header.channel_header)) {
             return null;
         }
 
         let header = data.payload.header.channel_header;
 
-        let item: ITransportFabricTransaction = {} as any;
+        let item = {} as any;
         item.hash = header.tx_id;
         item.channel = header.channel_id;
         item.createdDate = new Date(header.timestamp);
@@ -76,7 +80,7 @@ export class TransportFabricBlockParser {
         return item;
     }
 
-    protected parseTransactionBlockAction(transaction: ITransportFabricTransaction, action: any): void {
+    protected parseTransactionBlockAction(transaction: U, action: any): void {
         if (
             _.isNil(action.payload) ||
             _.isNil(action.payload.chaincode_proposal_payload) ||
@@ -124,7 +128,7 @@ export class TransportFabricBlockParser {
     //
     // --------------------------------------------------------------------------
 
-    protected parseEventBlockData(data: BlockData): Array<ITransportFabricEvent> {
+    protected parseEventBlockData(data: BlockData): Array<V> {
         if (_.isNil(data) || _.isNil(data.payload) || _.isNil(data.payload.header) || _.isNil(data.payload.header.channel_header)) {
             return [];
         }
@@ -138,7 +142,7 @@ export class TransportFabricBlockParser {
         return items;
     }
 
-    protected parseEventBlockAction(header: any, action: any): Array<ITransportFabricEvent> {
+    protected parseEventBlockAction(header: any, action: any): Array<V> {
         if (
             _.isNil(action.payload.action) ||
             _.isNil(action.payload.action.proposal_response_payload) ||
@@ -154,7 +158,7 @@ export class TransportFabricBlockParser {
         let payload = data.payload.toString();
         let chaincode = data.chaincode_id;
 
-        let items: Array<ITransportFabricEvent> = [];
+        let items: Array<V> = [];
         if (name !== TRANSPORT_CHAINCODE_EVENT) {
             if (ObjectUtil.isJSON(payload)) {
                 payload = TransformUtil.toJSON(payload);
@@ -169,7 +173,7 @@ export class TransportFabricBlockParser {
         return items.filter(item => !_.isEmpty(item.name));
     }
 
-    protected createEvent(name: string, header: any, chaincode: string, data: string): ITransportFabricEvent {
+    protected createEvent(name: string, header: any, chaincode: string, data: string): V {
         return {
             name,
             chaincode,
@@ -177,6 +181,6 @@ export class TransportFabricBlockParser {
             channel: header.channel_id,
             transactionHash: header.tx_id,
             createdDate: new Date(header.timestamp)
-        };
+        } as any;
     }
 }
