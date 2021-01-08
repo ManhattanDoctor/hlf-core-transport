@@ -14,7 +14,7 @@ export class TransportFabricBlockParser {
     //
     // --------------------------------------------------------------------------
 
-    public parse(block: IFabricBlock): ITransportFabricBlock {
+    public async parse(block: IFabricBlock): Promise<ITransportFabricBlock> {
         let item: ITransportFabricBlock = {} as any;
         item.hash = block.hash;
         item.number = block.number;
@@ -56,7 +56,7 @@ export class TransportFabricBlockParser {
     //
     // --------------------------------------------------------------------------
 
-    private parseTransactionBlockData(data: BlockData): ITransportFabricTransaction {
+    protected parseTransactionBlockData(data: BlockData): ITransportFabricTransaction {
         if (_.isNil(data) || _.isNil(data.payload) || _.isNil(data.payload.header) || _.isNil(data.payload.header.channel_header)) {
             return null;
         }
@@ -76,7 +76,7 @@ export class TransportFabricBlockParser {
         return item;
     }
 
-    private parseTransactionBlockAction(transaction: ITransportFabricTransaction, action: any): void {
+    protected parseTransactionBlockAction(transaction: ITransportFabricTransaction, action: any): void {
         if (
             _.isNil(action.payload) ||
             _.isNil(action.payload.chaincode_proposal_payload) ||
@@ -124,7 +124,7 @@ export class TransportFabricBlockParser {
     //
     // --------------------------------------------------------------------------
 
-    private parseEventBlockData(data: BlockData): Array<ITransportFabricEvent> {
+    protected parseEventBlockData(data: BlockData): Array<ITransportFabricEvent> {
         if (_.isNil(data) || _.isNil(data.payload) || _.isNil(data.payload.header) || _.isNil(data.payload.header.channel_header)) {
             return [];
         }
@@ -138,7 +138,7 @@ export class TransportFabricBlockParser {
         return items;
     }
 
-    private parseEventBlockAction(header: any, action: any): Array<ITransportFabricEvent> {
+    protected parseEventBlockAction(header: any, action: any): Array<ITransportFabricEvent> {
         if (
             _.isNil(action.payload.action) ||
             _.isNil(action.payload.action.proposal_response_payload) ||
@@ -154,6 +154,7 @@ export class TransportFabricBlockParser {
         let payload = data.payload.toString();
         let chaincode = data.chaincode_id;
 
+        let items: Array<ITransportFabricEvent> = [];
         if (name !== TRANSPORT_CHAINCODE_EVENT) {
             if (ObjectUtil.isJSON(payload)) {
                 payload = TransformUtil.toJSON(payload);
@@ -161,14 +162,14 @@ export class TransportFabricBlockParser {
                     payload = payload.data;
                 }
             }
-            return [this.createEvent(name, header, chaincode, payload)];
+            items = [this.createEvent(name, header, chaincode, payload)];
+        } else {
+            items = TransformUtil.toJSONMany(JSON.parse(payload)).map(item => this.createEvent(item.name, header, chaincode, item.data));
         }
-
-        let items = TransformUtil.toJSONMany(JSON.parse(payload));
-        return items.map(item => this.createEvent(item.name, header, chaincode, item.data));
+        return items.filter(item => !_.isEmpty(item.name));
     }
 
-    private createEvent(name: string, header: any, chaincode: string, data: string): ITransportFabricEvent {
+    protected createEvent(name: string, header: any, chaincode: string, data: string): ITransportFabricEvent {
         return {
             name,
             chaincode,
