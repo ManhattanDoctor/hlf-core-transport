@@ -28,7 +28,7 @@ import { ITransportFabricStub, TransportFabricStub } from './stub';
 import { TransportFabricChaincodeCommandWrapper } from './TransportFabricChaincodeCommandWrapper';
 import { ITransportFabricResponsePayload } from '../ITransportFabricResponsePayload';
 
-export class TransportFabricChaincodeReceiver extends Transport<ITransportFabricChaincodeSettings> {
+export class TransportFabricChaincodeReceiver<T extends ITransportFabricChaincodeSettings = ITransportFabricChaincodeSettings> extends Transport<T> {
     // --------------------------------------------------------------------------
     //
     //  Properties
@@ -45,7 +45,7 @@ export class TransportFabricChaincodeReceiver extends Transport<ITransportFabric
     //
     // --------------------------------------------------------------------------
 
-    constructor(logger: ILogger, settings?: ITransportFabricChaincodeSettings) {
+    constructor(logger: ILogger, settings?: T) {
         super(logger, settings);
     }
 
