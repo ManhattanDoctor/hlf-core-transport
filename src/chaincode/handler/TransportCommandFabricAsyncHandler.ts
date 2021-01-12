@@ -8,7 +8,7 @@ export abstract class TransportCommandFabricAsyncHandler<U, V, T extends ITransp
     //
     // --------------------------------------------------------------------------
 
-    protected abstract async execute(request: U, ...params): Promise<V>;
+    protected abstract execute(request: U, ...params): Promise<V>;
 
     protected checkResponse(params: V): V {
         return params;

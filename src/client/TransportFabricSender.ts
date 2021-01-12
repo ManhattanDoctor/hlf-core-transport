@@ -220,8 +220,6 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
 
     protected async parseTransactionError<U>(command: ITransportCommand<U>, error: Error): Promise<any> {
         error = ExtendedError.instanceOf(error) ? error : TransportFabricSender.parseEndorsementError(command, error);
-
-        this.error(error);
         if (!this.isCommandAsync(command)) {
             return;
         }
