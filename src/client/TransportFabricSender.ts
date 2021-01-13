@@ -288,20 +288,35 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         options: ITransportFabricCommandOptions,
         isNeedReply: boolean
     ): ITransportFabricRequestOptions<U> {
-        let item = new TransportFabricRequestPayload<U>();
-        item.options = TransformUtil.toClass(TransportFabricCommandOptions, options);
-        item.isReadonly = this.isCommandReadonly(command);
-        item.isNeedReply = isNeedReply;
-        ObjectUtil.copyProperties(command, item, ['id', 'name', 'request']);
-
-        ValidateUtil.validate(item);
-
-        let request: ITransportFabricRequestOptions = { method: TRANSPORT_FABRIC_METHOD, payload: item };
-        return request;
+        let payload = new TransportFabricRequestPayload<U>();
+        payload.id = command.id;
+        payload.name = command.name;
+        payload.options = TransformUtil.toClass(TransportFabricCommandOptions, options);
+        if (!_.isNil(command.request)) {
+            payload.request = command.request;
+        }
+        if (this.isCommandReadonly(command)) {
+            payload.isReadonly = true;
+        }
+        if (isNeedReply) {
+            payload.isNeedReply = isNeedReply;
+        }
+        ValidateUtil.validate(payload);
+        return { method: TRANSPORT_FABRIC_METHOD, payload };
     }
 
     protected getCommandOptions<U>(command: ITransportCommand<U>, options: ITransportFabricCommandOptions): ITransportFabricCommandOptions {
-        return super.getCommandOptions(command, options) as ITransportFabricCommandOptions;
+        let item = super.getCommandOptions(command, options);
+        if (item.timeout === Transport.DEFAULT_TIMEOUT) {
+            delete item.timeout;
+        }
+        if (item.waitDelay === Transport.DEFAULT_WAIT_DELAY) {
+            delete item.waitDelay;
+        }
+        if (item.waitMaxCount === Transport.DEFAULT_WAIT_MAX_COUNT) {
+            delete item.waitDelay;
+        }
+        return item;
     }
 
     protected isCommandReadonly<U>(command: ITransportCommand<U>): boolean {
