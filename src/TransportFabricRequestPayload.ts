@@ -1,14 +1,11 @@
-import { TransportCommandAsync, ITransportCommand, ITransportCommandAsync } from '@ts-core/common/transport';
 import { TransportInvalidDataError } from '@ts-core/common/transport/error';
 import { TransformUtil, ValidateUtil } from '@ts-core/common/util';
-import { IsBoolean, IsDefined, IsOptional, ValidateNested, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, ValidateNested, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ChaincodeStub } from 'fabric-shim';
 import { TRANSPORT_FABRIC_METHOD } from './constants';
 import { ITransportFabricRequestPayload } from './ITransportFabricRequestPayload';
-import { TransportFabricChaincodeReceiver } from './chaincode';
 import { TransportFabricCommandOptions } from './TransportFabricCommandOptions';
-import { TransportFabricStub, ITransportFabricStub, ITransportFabricStubHolder } from './chaincode/stub';
 import * as _ from 'lodash';
 
 export class TransportFabricRequestPayload<U = any> implements ITransportFabricRequestPayload<U> {
@@ -37,14 +34,6 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
         return payload;
     }
 
-    public static createCommand<U>(
-        payload: TransportFabricRequestPayload<U>,
-        stub: ChaincodeStub,
-        manager: TransportFabricChaincodeReceiver
-    ): ITransportCommand<U> {
-        return new TransportCommandFabricAsyncImpl(payload, stub, manager);
-    }
-
     // --------------------------------------------------------------------------
     //
     //  Properties
@@ -61,63 +50,15 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
     public request?: U;
 
     @Type(() => TransportFabricCommandOptions)
-    @IsDefined()
+    @IsOptional()
     @ValidateNested()
-    public options: TransportFabricCommandOptions;
+    public options?: TransportFabricCommandOptions;
 
+    @IsOptional()
     @IsBoolean()
-    public isNeedReply: boolean;
+    public isNeedReply?: boolean;
 
+    @IsOptional()
     @IsBoolean()
-    public isReadonly: boolean;
-}
-
-// --------------------------------------------------------------------------
-//
-//  Command Implementation
-//
-// --------------------------------------------------------------------------
-
-class TransportCommandFabricAsyncImpl<U, V> extends TransportCommandAsync<U, V> implements ITransportCommandAsync<U, V>, ITransportFabricStubHolder {
-    // --------------------------------------------------------------------------
-    //
-    //  Properties
-    //
-    // --------------------------------------------------------------------------
-
-    private _stub: TransportFabricStub;
-
-    // --------------------------------------------------------------------------
-    //
-    //  Constructor
-    //
-    // --------------------------------------------------------------------------
-
-    constructor(payload: TransportFabricRequestPayload<U>, stub: ChaincodeStub, transport: TransportFabricChaincodeReceiver) {
-        super(payload.name, payload.request, payload.id);
-        this._stub = new TransportFabricStub(stub, payload.id, payload.options, transport);
-    }
-
-    // --------------------------------------------------------------------------
-    //
-    //  Public Methods
-    //
-    // --------------------------------------------------------------------------
-
-    public destroy(): void {
-        if (!_.isNil(this.stub)) {
-            this.stub.destroy();
-            this._stub = null;
-        }
-    }
-
-    // --------------------------------------------------------------------------
-    //
-    //  Public Properties
-    //
-    // --------------------------------------------------------------------------
-
-    public get stub(): ITransportFabricStub {
-        return this._stub;
-    }
+    public isReadonly?: boolean;
 }

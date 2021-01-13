@@ -35,6 +35,7 @@ export interface ITransportFabricStub extends IDestroyable {
     removeState(key: string): Promise<void>;
 
     dispatch<T>(event: ITransportEvent<T>): Promise<void>;
+    destroy(): void;
 }
 
 export interface IKeyValue {
