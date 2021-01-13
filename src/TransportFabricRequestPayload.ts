@@ -7,7 +7,7 @@ import { TRANSPORT_FABRIC_METHOD } from './constants';
 import { ITransportFabricRequestPayload } from './ITransportFabricRequestPayload';
 import { TransportFabricCommandOptions } from './TransportFabricCommandOptions';
 import * as _ from 'lodash';
-import { Transport } from '@ts-core/common/transport';
+import { ITransportCommandOptions, Transport } from '@ts-core/common/transport';
 
 export class TransportFabricRequestPayload<U = any> implements ITransportFabricRequestPayload<U> {
     // --------------------------------------------------------------------------
@@ -16,7 +16,7 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
     //
     // --------------------------------------------------------------------------
 
-    public static parse<U = any>(stub: ChaincodeStub): TransportFabricRequestPayload<U> {
+    public static parse<U = any>(stub: ChaincodeStub, isNeedSetDefaultOptions: boolean): ITransportFabricRequestPayload<U> {
         let item = stub.getFunctionAndParameters();
         if (item.fcn !== TRANSPORT_FABRIC_METHOD) {
             throw new TransportInvalidDataError(`Invalid payload: function must be "${TRANSPORT_FABRIC_METHOD}"`, item.fcn);
@@ -28,23 +28,47 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
         let payload: TransportFabricRequestPayload = null;
         try {
             payload = TransformUtil.toClass<TransportFabricRequestPayload<U>>(TransportFabricRequestPayload, TransformUtil.toJSON(content));
-            if (_.isNil(payload.options)) {
-                payload.options = {};
-            }
-            if (_.isNil(payload.options.timeout)) {
-                payload.options.timeout = Transport.DEFAULT_TIMEOUT;
-            }
-            if (_.isNil(payload.options.waitDelay)) {
-                payload.options.waitDelay = Transport.DEFAULT_WAIT_DELAY;
-            }
-            if (_.isNil(payload.options.waitMaxCount)) {
-                payload.options.waitMaxCount = Transport.DEFAULT_WAIT_MAX_COUNT;
+            if (isNeedSetDefaultOptions) {
+                TransportFabricRequestPayload.setDefaultOptions(payload);
             }
         } catch (error) {
             throw new TransportInvalidDataError(`Invalid payload: ${error.message}`, content);
         }
         ValidateUtil.validate(payload);
         return payload;
+    }
+
+    public static setDefaultOptions<U>(payload: ITransportFabricRequestPayload<U>): void {
+        if (_.isNil(payload)) {
+            return;
+        }
+        let options = payload.options;
+        if (_.isNil(options)) {
+            options = payload.options = {};
+        }
+        if (_.isNil(options.timeout)) {
+            options.timeout = Transport.DEFAULT_TIMEOUT;
+        }
+        if (_.isNil(options.waitDelay)) {
+            options.waitDelay = Transport.DEFAULT_WAIT_DELAY;
+        }
+        if (_.isNil(options.waitMaxCount)) {
+            options.waitMaxCount = Transport.DEFAULT_WAIT_MAX_COUNT;
+        }
+    }
+    public static clearDefaultOptions(options: ITransportCommandOptions): void {
+        if (_.isNil(options)) {
+            return;
+        }
+        if (options.timeout === Transport.DEFAULT_TIMEOUT) {
+            delete options.timeout;
+        }
+        if (options.waitDelay === Transport.DEFAULT_WAIT_DELAY) {
+            delete options.waitDelay;
+        }
+        if (options.waitMaxCount === Transport.DEFAULT_WAIT_MAX_COUNT) {
+            delete options.waitMaxCount;
+        }
     }
 
     // --------------------------------------------------------------------------

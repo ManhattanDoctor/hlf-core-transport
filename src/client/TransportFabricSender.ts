@@ -17,6 +17,7 @@ import { TransportFabricCommandOptions } from '../TransportFabricCommandOptions'
 import { TRANSPORT_FABRIC_METHOD } from '../constants';
 import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload';
 import { ITransportFabricConnectionSettings } from './ITransportFabricConnectionSettings';
+import { TransportFabricChaincodeReceiver } from '../chaincode';
 
 export class TransportFabricSender<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends Transport<T> {
     // --------------------------------------------------------------------------
@@ -307,15 +308,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
 
     protected getCommandOptions<U>(command: ITransportCommand<U>, options: ITransportFabricCommandOptions): ITransportFabricCommandOptions {
         let item = super.getCommandOptions(command, options);
-        if (item.timeout === Transport.DEFAULT_TIMEOUT) {
-            delete item.timeout;
-        }
-        if (item.waitDelay === Transport.DEFAULT_WAIT_DELAY) {
-            delete item.waitDelay;
-        }
-        if (item.waitMaxCount === Transport.DEFAULT_WAIT_MAX_COUNT) {
-            delete item.waitDelay;
-        }
+        TransportFabricRequestPayload.clearDefaultOptions(options);
         return item;
     }
 

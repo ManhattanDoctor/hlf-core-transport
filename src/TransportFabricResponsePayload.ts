@@ -28,7 +28,7 @@ export class TransportFabricResponsePayload<U = any, V = any> implements ITransp
         return payload;
     }
 
-    public static fromError(id: string, error: ExtendedError): TransportFabricResponsePayload {
+    public static fromError(id: string, error: ExtendedError): ITransportFabricResponsePayload {
         let payload = new TransportFabricResponsePayload();
         payload.id = id;
         payload.response = error;

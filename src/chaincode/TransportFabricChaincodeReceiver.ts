@@ -23,9 +23,9 @@ import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload'
 import { ISignature } from '@ts-core/common/crypto';
 import { IDestroyable } from '@ts-core/common/IDestroyable';
 import { ITransportCryptoManager } from '@ts-core/common/transport/crypto';
-import { ITransportFabricRequestPayload } from '../ITransportFabricRequestPayload';
 import { ITransportFabricStub, TransportFabricStub } from './stub';
 import { TransportFabricChaincodeCommandWrapper } from './TransportFabricChaincodeCommandWrapper';
+import { ITransportFabricRequestPayload } from '../ITransportFabricRequestPayload';
 import { ITransportFabricResponsePayload } from '../ITransportFabricResponsePayload';
 
 export class TransportFabricChaincodeReceiver<T extends ITransportFabricChaincodeSettings = ITransportFabricChaincodeSettings> extends Transport<T> {
@@ -35,7 +35,7 @@ export class TransportFabricChaincodeReceiver<T extends ITransportFabricChaincod
     //
     // --------------------------------------------------------------------------
 
-    protected defaultCreateStubFactory = <U>(stub: ChaincodeStub, payload: TransportFabricRequestPayload<U>, transport: ITransportReceiver) =>
+    protected defaultCreateStubFactory = <U>(stub: ChaincodeStub, payload: ITransportFabricRequestPayload<U>, transport: ITransportReceiver) =>
         new TransportFabricStub(stub, payload.id, payload.options, transport);
     protected defaultCreateCommandFactory = <U>(item: ITransportFabricRequestPayload<U>) => new TransportCommandAsync(item.name, item.request, item.id);
 
@@ -61,7 +61,7 @@ export class TransportFabricChaincodeReceiver<T extends ITransportFabricChaincod
         let command: ITransportCommand<U> = null;
 
         try {
-            payload = TransportFabricRequestPayload.parse(chaincode);
+            payload = TransportFabricRequestPayload.parse(chaincode, true);
             stub = this.createStub(chaincode, payload, this);
             command = this.createCommand(payload, stub);
             if (!this.isNonSignedCommand(command)) {
@@ -176,7 +176,7 @@ export class TransportFabricChaincodeReceiver<T extends ITransportFabricChaincod
     // --------------------------------------------------------------------------
 
     protected checkRequestStorage<U>(
-        payload: TransportFabricRequestPayload<U>,
+        payload: ITransportFabricRequestPayload<U>,
         stub: ITransportFabricStub,
         command: ITransportCommand<U>
     ): ITransportFabricRequestStorage<U> {
@@ -228,7 +228,7 @@ export class TransportFabricChaincodeReceiver<T extends ITransportFabricChaincod
 
     protected executeCommand<U>(
         chaincodeStub: ChaincodeStub,
-        payload: TransportFabricRequestPayload<U>,
+        payload: ITransportFabricRequestPayload<U>,
         stub: ITransportFabricStub,
         command: ITransportCommand<U>
     ): void {
@@ -245,7 +245,7 @@ export class TransportFabricChaincodeReceiver<T extends ITransportFabricChaincod
         return new TransportFabricChaincodeCommandWrapper(payload, command, stub);
     }
 
-    protected createStub<U>(stub: ChaincodeStub, payload: TransportFabricRequestPayload<U>, transport: ITransportReceiver): ITransportFabricStub {
+    protected createStub<U>(stub: ChaincodeStub, payload: ITransportFabricRequestPayload<U>, transport: ITransportReceiver): ITransportFabricStub {
         return this.getSettingsValue('stubFactory', this.defaultCreateStubFactory)(stub, payload, transport);
     }
 
@@ -258,11 +258,11 @@ export interface ITransportFabricChaincodeSettings extends ITransportSettings {
     cryptoManagers?: Array<ITransportCryptoManager>;
     nonSignedCommands?: Array<string>;
 
-    stubFactory?: <U>(stub: ChaincodeStub, payload: TransportFabricRequestPayload<U>, transport: ITransportReceiver) => ITransportFabricStub;
+    stubFactory?: <U>(stub: ChaincodeStub, payload: ITransportFabricRequestPayload<U>, transport: ITransportReceiver) => ITransportFabricStub;
     commandFactory?: <U>(payload: ITransportFabricRequestPayload<U>) => ITransportCommand<U>;
 }
 
 interface ITransportFabricRequestStorage<U = any, V = any> extends ITransportRequestStorage {
-    payload: TransportFabricRequestPayload<U>;
+    payload: ITransportFabricRequestPayload<U>;
     handler: PromiseHandler<ITransportFabricResponsePayload<V>, ExtendedError>;
 }
