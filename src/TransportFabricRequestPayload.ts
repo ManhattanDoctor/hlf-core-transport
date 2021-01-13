@@ -7,6 +7,7 @@ import { TRANSPORT_FABRIC_METHOD } from './constants';
 import { ITransportFabricRequestPayload } from './ITransportFabricRequestPayload';
 import { TransportFabricCommandOptions } from './TransportFabricCommandOptions';
 import * as _ from 'lodash';
+import { Transport } from '@ts-core/common/transport';
 
 export class TransportFabricRequestPayload<U = any> implements ITransportFabricRequestPayload<U> {
     // --------------------------------------------------------------------------
@@ -27,6 +28,18 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
         let payload: TransportFabricRequestPayload = null;
         try {
             payload = TransformUtil.toClass<TransportFabricRequestPayload<U>>(TransportFabricRequestPayload, TransformUtil.toJSON(content));
+            if (_.isNil(payload.options)) {
+                payload.options = {};
+            }
+            if (_.isNil(payload.options.timeout)) {
+                payload.options.timeout = Transport.DEFAULT_TIMEOUT;
+            }
+            if (_.isNil(payload.options.waitDelay)) {
+                payload.options.waitDelay = Transport.DEFAULT_WAIT_DELAY;
+            }
+            if (_.isNil(payload.options.waitMaxCount)) {
+                payload.options.waitMaxCount = Transport.DEFAULT_WAIT_MAX_COUNT;
+            }
         } catch (error) {
             throw new TransportInvalidDataError(`Invalid payload: ${error.message}`, content);
         }
