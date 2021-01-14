@@ -7,7 +7,6 @@ import { ExtendedError } from '@ts-core/common/error';
 import { TransportFabricStubWrapper } from './TransportFabricStubWrapper';
 import { TransportFabricStubBatch } from './TransportFabricStubBatch';
 import { DateUtil, TransformUtil } from '@ts-core/common/util';
-import { ITransportFabricChaincodeBatchDtoResponse } from './ITransportFabricChaincodeBatchDtoResponse';
 import { DatabaseManager } from '../database';
 import { TransportFabricChaincodeReceiver } from '../TransportFabricChaincodeReceiver';
 import { TransportFabricRequestPayload } from '../../TransportFabricRequestPayload';
@@ -43,12 +42,12 @@ export class TransportFabricChaincodeReceiverBatch extends TransportFabricChainc
         this.complete(command, this.isCommandBatch(payload) ? await this.executeBatch(stubOriginal, stub) : await this.addToBatch(payload, stub, command));
     }
 
-    protected async executeBatch<U>(stubOriginal: ChaincodeStub, stub: ITransportFabricStub): Promise<ITransportFabricChaincodeBatchDtoResponse> {
+    protected async executeBatch<U>(stubOriginal: ChaincodeStub, stub: ITransportFabricStub): Promise<any> {
         let database = new DatabaseManager(this.logger, stub);
         let items = await database.getKV(TransportFabricChaincodeReceiverBatch.PREFIX);
 
         let wrapper = new TransportFabricStubWrapper(stubOriginal);
-        let response = {} as ITransportFabricChaincodeBatchDtoResponse;
+        let response = {} as any;
 
         for (let item of items) {
             let result = {};
