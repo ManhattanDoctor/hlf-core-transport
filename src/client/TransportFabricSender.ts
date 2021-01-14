@@ -24,6 +24,7 @@ import { TransportFabricCommandOptions } from '../TransportFabricCommandOptions'
 import { TRANSPORT_CHAINCODE_EVENT, TRANSPORT_FABRIC_METHOD } from '../constants';
 import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload';
 import { ITransportFabricConnectionSettings } from './ITransportFabricConnectionSettings';
+import { TransportFabricBlockParser } from './block';
 
 export class TransportFabricSender<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends Transport<T> {
     // --------------------------------------------------------------------------
@@ -169,7 +170,12 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     }
 
     public dispatch<T>(event: ITransportEvent<T>): void {
-        throw new ExtendedError(`Method is not supported, implemented only in chaincode`);
+        let item = this.dispatchers.get(event.name);
+        if (_.isNil(item)) {
+            return;
+        }
+        this.logEvent(event, TransportLogType.EVENT_SENDED);
+        item.next(event);
     }
 
     public listen<U>(name: string): Observable<U> {
@@ -359,12 +365,16 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
             this.warn(`Received nil event`);
             return;
         }
-        /*
-        if (!this.dispatchers.has(event.event_name)) {
-            return;
+
+        let header = {
+            channel_id: this.api.channel.getName(),
+            tx_id: event.tx_id,
+            timestamp: new Date().toDateString()
+        };
+        let items = TransportFabricBlockParser.parseEvents(event.event_name, header, event.chaincode_id, event.payload.toString());
+        if (!_.isEmpty(items)) {
+            items.forEach(item => this.dispatch(item));
         }
-        this.dispatchers.get(event.event_name).next(TransformUtil.toJSON(event.payload.toString()));
-        */
     }
 
     // --------------------------------------------------------------------------
