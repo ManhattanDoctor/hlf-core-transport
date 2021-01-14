@@ -170,12 +170,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     }
 
     public dispatch<T>(event: ITransportEvent<T>): void {
-        let item = this.dispatchers.get(event.name);
-        if (_.isNil(item)) {
-            return;
-        }
-        this.logEvent(event, TransportLogType.EVENT_SENDED);
-        item.next(event);
+        throw new ExtendedError(`Method is not supported, implemented only in chaincode`);
     }
 
     public listen<U>(name: string): Observable<U> {
@@ -334,6 +329,15 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         return false;
     }
 
+    protected _dispatch<T>(event: ITransportEvent<T>): void {
+        let item = this.dispatchers.get(event.name);
+        if (_.isNil(item)) {
+            return;
+        }
+        this.logEvent(event, TransportLogType.EVENT_SENDED);
+        item.next(event);
+    }
+
     // --------------------------------------------------------------------------
     //
     //  Event Handlers
@@ -373,7 +377,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         };
         let items = TransportFabricBlockParser.parseEvents(event.event_name, header, event.chaincode_id, event.payload.toString());
         if (!_.isEmpty(items)) {
-            items.forEach(item => this.dispatch(item));
+            items.forEach(item => this._dispatch(item));
         }
     }
 
