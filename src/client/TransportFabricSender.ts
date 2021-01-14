@@ -4,12 +4,19 @@ import { ILogger } from '@ts-core/common/logger';
 import { ObservableData } from '@ts-core/common/observer';
 import { PromiseHandler } from '@ts-core/common/promise';
 import { Observable } from 'rxjs';
-import { ITransportCommand, ITransportCommandAsync, ITransportEvent, Transport, TransportLogType, TransportTimeoutError } from '@ts-core/common/transport';
+import {
+    ITransportCommand,
+    ITransportCommandAsync,
+    ITransportCommandOptions,
+    ITransportEvent,
+    Transport,
+    TransportLogType,
+    TransportTimeoutError
+} from '@ts-core/common/transport';
 import { DateUtil, ObjectUtil, TransformUtil, ValidateUtil } from '@ts-core/common/util';
 import { ContractEventListener, Transaction } from 'fabric-network';
 import * as _ from 'lodash';
-import { IFabricConnectionSettings, FabricApiClient } from '@hlf-core/api';
-import { ITransportSettings } from '@ts-core/common/transport';
+import { FabricApiClient } from '@hlf-core/api';
 import { TransportFabricResponsePayload } from '../TransportFabricResponsePayload';
 import { ITransportFabricCommandOptions } from '../ITransportFabricCommandOptions';
 import { ITransportFabricRequestOptions } from '../ITransportFabricRequestOptions';
@@ -17,7 +24,6 @@ import { TransportFabricCommandOptions } from '../TransportFabricCommandOptions'
 import { TRANSPORT_FABRIC_METHOD } from '../constants';
 import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload';
 import { ITransportFabricConnectionSettings } from './ITransportFabricConnectionSettings';
-import { TransportFabricChaincodeReceiver } from '../chaincode';
 
 export class TransportFabricSender<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends Transport<T> {
     // --------------------------------------------------------------------------
@@ -26,7 +32,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     //
     // --------------------------------------------------------------------------
 
-    private static parseEndorsementError<U>(command: ITransportCommand<U>, error: any): ExtendedError {
+    protected static parseEndorsementError<U>(command: ITransportCommand<U>, error: any): ExtendedError {
         if (!_.isEmpty(error.endorsements)) {
             return TransportFabricSender.parseEndorsementError(command, error.endorsements[0]);
         }
@@ -157,7 +163,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
 
     public getDispatcher<T>(name: string): Observable<T> {
         if (!this.contractEvents.has(name)) {
-            this.contractEvents.set(name, this.api.contract.addContractListener(name, name, this.contractEventCallback));
+            this.contractEvents.set(name, this.api.contract.addContractListener(name, name, this.contractEventCallbackProxy));
         }
         return super.getDispatcher(name);
     }
@@ -241,6 +247,13 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
             throw new ExtendedError(`Unable to send wait "${command.name}" command: transport is not connected`);
         }
         this.logCommand(command, TransportLogType.RESPONSE_WAIT);
+    }
+
+    protected getCommandTimeoutDelay<U>(command: ITransportCommand<U>, options: ITransportCommandOptions): number {
+        if (_.isNil(options) || _.isNil(options.timeout)) {
+            return Transport.DEFAULT_TIMEOUT;
+        }
+        return super.getCommandTimeoutDelay(command, options);
     }
 
     // --------------------------------------------------------------------------
@@ -328,6 +341,10 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     //
     // --------------------------------------------------------------------------
 
+    private contractEventCallbackProxy = (error: Error, event: any): void => {
+        this.contractEventCallback(error, event);
+    };
+
     protected connectionConnectCompleteHandler = (): void => {
         this._isConnected = true;
         if (this.connectionPromise) {
@@ -338,6 +355,21 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     protected connectionConnectErrorHandler = (error: ExtendedError): void => {
         this.disconnect(error);
     };
+
+    protected contractEventCallback(error: Error, event: any): void {
+        if (!_.isNil(error)) {
+            this.error(error);
+            return;
+        }
+        if (_.isNil(event)) {
+            this.warn(`Received nil event`);
+            return;
+        }
+        if (!this.dispatchers.has(event.event_name)) {
+            return;
+        }
+        this.dispatchers.get(event.event_name).next(TransformUtil.toJSON(event.payload.toString()));
+    }
 
     // --------------------------------------------------------------------------
     //
@@ -363,21 +395,6 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
             this.reconnect();
         }
     }
-
-    protected contractEventCallback = <T>(error: Error, event: any): void => {
-        if (!_.isNil(error)) {
-            this.error(error);
-            return;
-        }
-        if (_.isNil(event)) {
-            this.warn(`Received nil event`);
-            return;
-        }
-        if (!this.dispatchers.has(event.event_name)) {
-            return;
-        }
-        this.dispatchers.get(event.event_name).next(TransformUtil.toJSON(event.payload.toString()));
-    };
 
     // --------------------------------------------------------------------------
     //

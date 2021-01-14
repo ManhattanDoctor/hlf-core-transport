@@ -8,6 +8,8 @@ import { ITransportFabricRequestPayload } from './ITransportFabricRequestPayload
 import { TransportFabricCommandOptions } from './TransportFabricCommandOptions';
 import * as _ from 'lodash';
 import { ITransportCommandOptions, Transport } from '@ts-core/common/transport';
+import { TransportCryptoManagerEd25519 } from '@ts-core/common/transport/crypto';
+import { ITransportFabricCommandOptions } from './ITransportFabricCommandOptions';
 
 export class TransportFabricRequestPayload<U = any> implements ITransportFabricRequestPayload<U> {
     // --------------------------------------------------------------------------
@@ -55,8 +57,11 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
         if (_.isNil(options.waitMaxCount)) {
             options.waitMaxCount = Transport.DEFAULT_WAIT_MAX_COUNT;
         }
+        if (!_.isNil(options.signature) && _.isNil(options.signature.algorithm)) {
+            options.signature.algorithm = TransportCryptoManagerEd25519.ALGORITHM;
+        }
     }
-    public static clearDefaultOptions(options: ITransportCommandOptions): void {
+    public static clearDefaultOptions(options: ITransportFabricCommandOptions): void {
         if (_.isNil(options)) {
             return;
         }
@@ -68,6 +73,9 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
         }
         if (options.waitMaxCount === Transport.DEFAULT_WAIT_MAX_COUNT) {
             delete options.waitMaxCount;
+        }
+        if (!_.isNil(options.signature) && options.signature.algorithm === TransportCryptoManagerEd25519.ALGORITHM) {
+            delete options.signature.algorithm;
         }
     }
 
