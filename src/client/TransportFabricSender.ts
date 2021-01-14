@@ -21,7 +21,7 @@ import { TransportFabricResponsePayload } from '../TransportFabricResponsePayloa
 import { ITransportFabricCommandOptions } from '../ITransportFabricCommandOptions';
 import { ITransportFabricRequestOptions } from '../ITransportFabricRequestOptions';
 import { TransportFabricCommandOptions } from '../TransportFabricCommandOptions';
-import { TRANSPORT_FABRIC_METHOD } from '../constants';
+import { TRANSPORT_CHAINCODE_EVENT, TRANSPORT_FABRIC_METHOD } from '../constants';
 import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload';
 import { ITransportFabricConnectionSettings } from './ITransportFabricConnectionSettings';
 
@@ -57,7 +57,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     //
     // --------------------------------------------------------------------------
 
-    private contractEvents: Map<string, Promise<ContractEventListener>>;
+    private contractEvent: ContractEventListener;
 
     private connectionPromise: PromiseHandler<void, ExtendedError>;
     private connectionAttempts: number;
@@ -75,7 +75,6 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         super(logger, settings, context);
 
         this._api = new FabricApiClient(logger, settings);
-        this.contractEvents = new Map();
     }
 
     // --------------------------------------------------------------------------
@@ -110,7 +109,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     }
 
     public disconnect(error?: ExtendedError): void {
-        if (this.connectionPromise) {
+        if (!_.isNil(this.connectionPromise)) {
             this.connectionPromise.reject(error);
             this.connectionPromise = null;
         }
@@ -118,10 +117,10 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         this.api.disconnect();
         this._isConnected = false;
 
-        for (let item of this.contractEvents.values()) {
-            item.then(item => item.unregister());
+        if (!_.isNil(this.contractEvent)) {
+            this.contractEvent.unregister();
+            this.contractEvent = null;
         }
-        this.contractEvents.clear();
 
         if (!_.isNil(error)) {
             this.error(error);
@@ -161,13 +160,6 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         return handler.promise;
     }
 
-    public getDispatcher<T>(name: string): Observable<T> {
-        if (!this.contractEvents.has(name)) {
-            this.contractEvents.set(name, this.api.contract.addContractListener(name, name, this.contractEventCallbackProxy));
-        }
-        return super.getDispatcher(name);
-    }
-
     public complete<U, V>(command: ITransportCommand<U>, result?: V | Error): void {
         throw new ExtendedError(`Method is not supported, implemented only in chaincode`);
     }
@@ -192,7 +184,6 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
 
         this.disconnect();
         this.requests = null;
-        this.contractEvents = null;
     }
 
     // --------------------------------------------------------------------------
@@ -208,6 +199,8 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
 
         try {
             let request = this.createRequestOptions(command, options, isNeedReply);
+            TransportFabricRequestPayload.clear(request.payload);
+
             let response = await this.transactionSend(this.api.contract.createTransaction(request.method), command, request);
             if (this.isCommandAsync(command) && isNeedReply) {
                 this.responseMessageReceived(command.id, response);
@@ -345,16 +338,17 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         this.contractEventCallback(error, event);
     };
 
-    protected connectionConnectCompleteHandler = (): void => {
+    protected async connectionCompleteHandler(): Promise<void> {
         this._isConnected = true;
-        if (this.connectionPromise) {
+        this.contractEvent = await this.api.contract.addContractListener(TRANSPORT_CHAINCODE_EVENT, TRANSPORT_CHAINCODE_EVENT, this.contractEventCallbackProxy);
+        if (!_.isNil(this.connectionPromise)) {
             this.connectionPromise.resolve();
         }
-    };
+    }
 
-    protected connectionConnectErrorHandler = (error: ExtendedError): void => {
+    protected async connectionErrorHandler(error: ExtendedError): Promise<void> {
         this.disconnect(error);
-    };
+    }
 
     protected contractEventCallback(error: Error, event: any): void {
         if (!_.isNil(error)) {
@@ -365,10 +359,12 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
             this.warn(`Received nil event`);
             return;
         }
+        /*
         if (!this.dispatchers.has(event.event_name)) {
             return;
         }
         this.dispatchers.get(event.event_name).next(TransformUtil.toJSON(event.payload.toString()));
+        */
     }
 
     // --------------------------------------------------------------------------
@@ -383,11 +379,11 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         this.connectionAttempts++;
         try {
             await this.api.connect();
-            this.connectionConnectCompleteHandler();
+            await this.connectionCompleteHandler();
         } catch (error) {
             error = ExtendedError.create(error, TransportTimeoutError.ERROR_CODE);
             if (this.connectionAttempts > this.settings.reconnectMaxAttempts) {
-                this.connectionConnectErrorHandler(error);
+                await this.connectionErrorHandler(error);
                 return;
             }
             await PromiseHandler.delay(this.settings.reconnectDelay);

@@ -40,6 +40,13 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
         return payload;
     }
 
+    public static clear<U>(payload: ITransportFabricRequestPayload<U>): void {
+        TransportFabricRequestPayload.clearDefaultOptions(payload.options);
+        if (_.isEmpty(payload.options)) {
+            delete payload.options;
+        }
+    }
+
     public static setDefaultOptions<U>(payload: ITransportFabricRequestPayload<U>): void {
         if (_.isNil(payload)) {
             return;
@@ -61,6 +68,7 @@ export class TransportFabricRequestPayload<U = any> implements ITransportFabricR
             options.signature.algorithm = TransportCryptoManagerEd25519.ALGORITHM;
         }
     }
+
     public static clearDefaultOptions(options: ITransportFabricCommandOptions): void {
         if (_.isNil(options)) {
             return;
