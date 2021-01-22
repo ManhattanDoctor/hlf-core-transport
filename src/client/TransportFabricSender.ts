@@ -380,7 +380,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         this.disconnect(error);
     }
 
-    protected blockEventCallback(error: Error, block: any): void {
+    protected async blockEventCallback(error: Error, block: any): Promise<void> {
         if (!_.isNil(error)) {
             this.error(error);
             return;
@@ -391,7 +391,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         }
     }
 
-    protected contractEventCallback(error: Error, event: any): void {
+    protected async contractEventCallback(error: Error, event: any): Promise<void> {
         if (!_.isNil(error)) {
             this.error(error);
             return;
@@ -400,18 +400,6 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
             this.warn(`Received nil event`);
             return;
         }
-
-        /*
-        let header = {
-            channel_id: this.api.channel.getName(),
-            tx_id: event.tx_id,
-            timestamp: new Date().toDateString()
-        };
-        let items = TransportFabricBlockParser.parseEvents(event.event_name, header, event.chaincode_id, event.payload.toString());
-        if (!_.isEmpty(items)) {
-            items.forEach(item => this._dispatch(item));
-        }
-        */
     }
 
     // --------------------------------------------------------------------------
