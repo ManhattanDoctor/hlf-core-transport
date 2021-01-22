@@ -14,7 +14,7 @@ import {
     TransportTimeoutError
 } from '@ts-core/common/transport';
 import { DateUtil, ObjectUtil, TransformUtil, ValidateUtil } from '@ts-core/common/util';
-import { ContractEventListener, Transaction } from 'fabric-network';
+import { ContractEventListener, BlockEventListener, Transaction } from 'fabric-network';
 import * as _ from 'lodash';
 import { FabricApiClient } from '@hlf-core/api';
 import { TransportFabricResponsePayload } from '../TransportFabricResponsePayload';
@@ -67,6 +67,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     //
     // --------------------------------------------------------------------------
 
+    private blockEvent: BlockEventListener;
     private contractEvent: ContractEventListener;
 
     private connectionPromise: PromiseHandler<void, ExtendedError>;
@@ -130,6 +131,11 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         if (!_.isNil(this.contractEvent)) {
             this.contractEvent.unregister();
             this.contractEvent = null;
+        }
+
+        if (!_.isNil(this.blockEvent)) {
+            this.blockEvent.unregister();
+            this.blockEvent = null;
         }
 
         if (!_.isNil(error)) {
@@ -353,12 +359,17 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     //
     // --------------------------------------------------------------------------
 
+    private blockEventCallbackProxy = (error: Error, event: any): void => {
+        this.blockEventCallback(error, event);
+    };
+
     private contractEventCallbackProxy = (error: Error, event: any): void => {
         this.contractEventCallback(error, event);
     };
 
     protected async connectionCompleteHandler(): Promise<void> {
         this._isConnected = true;
+        this.blockEvent = await this.api.network.addBlockListener('blockListener', this.blockEventCallbackProxy);
         this.contractEvent = await this.api.contract.addContractListener(TRANSPORT_CHAINCODE_EVENT, TRANSPORT_CHAINCODE_EVENT, this.contractEventCallbackProxy);
         if (!_.isNil(this.connectionPromise)) {
             this.connectionPromise.resolve();
@@ -367,6 +378,17 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
 
     protected async connectionErrorHandler(error: ExtendedError): Promise<void> {
         this.disconnect(error);
+    }
+
+    protected blockEventCallback(error: Error, block: any): void {
+        if (!_.isNil(error)) {
+            this.error(error);
+            return;
+        }
+        if (_.isNil(block)) {
+            this.warn(`Received nil block`);
+            return;
+        }
     }
 
     protected contractEventCallback(error: Error, event: any): void {
@@ -379,6 +401,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
             return;
         }
 
+        /*
         let header = {
             channel_id: this.api.channel.getName(),
             tx_id: event.tx_id,
@@ -388,6 +411,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         if (!_.isEmpty(items)) {
             items.forEach(item => this._dispatch(item));
         }
+        */
     }
 
     // --------------------------------------------------------------------------
