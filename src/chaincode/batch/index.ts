@@ -1,5 +1,5 @@
 export * from './TransportFabricStubBatch';
-export * from './TransportFabricEventBatch';
+export * from './ITransportFabricBatchDto';
 export * from './TransportFabricStubWrapper';
 export * from './TransportFabricCommandBatch';
 export * from './TransportFabricChaincodeReceiverBatch';
