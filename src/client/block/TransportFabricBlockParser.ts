@@ -34,6 +34,18 @@ export class TransportFabricBlockParser<
         return items.filter(item => !_.isEmpty(item.name));
     }
 
+    public static checkEventsCode<U extends ITransportFabricTransaction, V extends ITransportFabricEvent>(transactions: Array<U>, events: Array<V>): void {
+        for (let event of events) {
+            if (_.isNil(event.transactionHash)) {
+                continue;
+            }
+            let transaction = _.find(transactions, item => item.hash === event.transactionHash);
+            if (!_.isNil(transaction)) {
+                event.transactionValidationCode = transaction.validationCode;
+            }
+        }
+    }
+
     protected static createEvent<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, data: string): V {
         return {
             name,
@@ -77,15 +89,7 @@ export class TransportFabricBlockParser<
                 events.push(...event);
             }
         }
-        for (let event of events) {
-            if (_.isNil(event.transactionHash)) {
-                continue;
-            }
-            let transaction = _.find(transactions, item => item.hash === event.transactionHash);
-            if (!_.isNil(transaction)) {
-                event.transactionValidationCode = transaction.validationCode;
-            }
-        }
+        TransportFabricBlockParser.checkEventsCode(transactions, events);
         return item;
     }
 
