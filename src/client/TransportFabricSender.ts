@@ -33,21 +33,30 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     //
     // --------------------------------------------------------------------------
 
-    protected static parseEndorsementError<U>(command: ITransportCommand<U>, error: any): ExtendedError {
-        if (!_.isEmpty(error.endorsements)) {
-            return TransportFabricSender.parseEndorsementError(command, error.endorsements[0]);
-        }
-
+    protected static parseChaincodeError<U>(command: ITransportCommand<U>, error: any): ExtendedError {
         let defaultError = new ExtendedError(`Unable to send "${command.name}" command request: ${error.message}`);
-        if (_.isNil(error.message)) {
-            return defaultError;
+        let item = null;
+        if (!_.isEmpty(error.responses)) {
+            item = error.responses[0];
+        } else if (!_.isEmpty(error.endorsements)) {
+            item = error.endorsements[0];
         }
+        if (!_.isNil(item)) {
+            error = TransportFabricSender.parseError(item);
+        }
+        return !_.isNil(error) ? error : defaultError;
+    }
+
+    protected static parseError(error: any): ExtendedError {
         let message = error.message.replace('transaction returned with failure:', '').trim();
         if (!ObjectUtil.isJSON(message)) {
-            return defaultError;
+            return null;
         }
         let response = TransformUtil.toClass(TransportFabricResponsePayload, TransformUtil.toJSON(message));
-        let item = ExtendedError.instanceOf(response.response) ? ExtendedError.create(response.response) : defaultError;
+        if (!ExtendedError.instanceOf(response.response)) {
+            return null;
+        }
+        let item = ExtendedError.create(response.response);
         item.stack = null;
         return item;
     }
@@ -220,7 +229,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     }
 
     protected async parseTransactionError<U>(command: ITransportCommand<U>, error: Error): Promise<any> {
-        error = ExtendedError.instanceOf(error) ? error : TransportFabricSender.parseEndorsementError(command, error);
+        error = ExtendedError.instanceOf(error) ? error : TransportFabricSender.parseChaincodeError(command, error);
         if (!this.isCommandAsync(command)) {
             return;
         }

@@ -57,8 +57,8 @@ export class TransportFabricBlockParser<
         item.number = block.number;
         item.createdDate = block.createdDate;
 
-        let events = (item.events = []);
-        let transactions = (item.transactions = []);
+        let events: Array<V> = (item.events = []);
+        let transactions: Array<U> = (item.transactions = []);
         if (_.isNil(block.data) || _.isEmpty(block.data.data)) {
             return;
         }
@@ -77,7 +77,15 @@ export class TransportFabricBlockParser<
                 events.push(...event);
             }
         }
-
+        for (let event of events) {
+            if (_.isNil(event.transactionHash)) {
+                continue;
+            }
+            let transaction = _.find(transactions, item => item.hash === event.transactionHash);
+            if (!_.isNil(transaction)) {
+                event.transactionValidationCode = transaction.validationCode;
+            }
+        }
         return item;
     }
 

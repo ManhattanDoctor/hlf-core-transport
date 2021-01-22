@@ -1,3 +1,4 @@
+import { FabricTransactionValidationCode } from '@hlf-core/api';
 import { ITransportEvent } from '@ts-core/common/transport';
 
 export interface ITransportFabricEvent<T = any> extends ITransportEvent<T> {
@@ -5,4 +6,5 @@ export interface ITransportFabricEvent<T = any> extends ITransportEvent<T> {
     chaincode: string;
     createdDate: Date;
     transactionHash: string;
+    transactionValidationCode: FabricTransactionValidationCode;
 }
