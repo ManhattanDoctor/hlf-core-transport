@@ -1,7 +1,9 @@
-import { ArrayUtil } from '@ts-core/common/util';
+import { ITransportEvent, ITransportReceiver } from '@ts-core/common/transport';
 import { ChaincodeStub, Iterators } from 'fabric-shim';
 import * as _ from 'lodash';
+import { ITransportFabricCommandOptions } from '../../ITransportFabricCommandOptions';
 import { IKeyValue, TransportFabricStub } from '../stub';
+import { StateProxy } from './StateProxy';
 
 export class TransportFabricStubWrapper extends TransportFabricStub {
     // --------------------------------------------------------------------------
@@ -10,8 +12,7 @@ export class TransportFabricStubWrapper extends TransportFabricStub {
     //
     // --------------------------------------------------------------------------
 
-    protected state: Map<string, string>;
-    protected keysToRemove: Array<string>;
+    protected state: StateProxy;
 
     // --------------------------------------------------------------------------
     //
@@ -19,21 +20,9 @@ export class TransportFabricStubWrapper extends TransportFabricStub {
     //
     // --------------------------------------------------------------------------
 
-    constructor(stub: ChaincodeStub) {
-        super(stub, null, null, null);
-
-        this.state = new Map();
-        this.keysToRemove = new Array();
-    }
-
-    // --------------------------------------------------------------------------
-    //
-    //  Protected Methods
-    //
-    // --------------------------------------------------------------------------
-
-    protected isKeyRemoved(key: string): boolean {
-        return this.keysToRemove.includes(key);
+    constructor(stub: ChaincodeStub, requestId: string, options: ITransportFabricCommandOptions, transport: ITransportReceiver) {
+        super(stub, requestId, options, transport);
+        this.state = new StateProxy(this.getStateRawProxy);
     }
 
     // --------------------------------------------------------------------------
@@ -42,15 +31,19 @@ export class TransportFabricStubWrapper extends TransportFabricStub {
     //
     // --------------------------------------------------------------------------
 
-    public async commitToState(): Promise<void> {
-        for (let key of this.keysToRemove) {
+    protected getStateRawProxy = (item: string): Promise<string> => super.getStateRaw(item);
+
+    public async complete(): Promise<void> {
+        for (let key of this.state.toRemove) {
             await super.removeState(key);
         }
-        for (let key of this.state.keys()) {
-            await super.putStateRaw(key, this.state.get(key));
+        for (let key of this.state.toPut.keys()) {
+            await super.putStateRaw(key, this.state.toPut.get(key));
         }
-        this.state.clear();
-        this.keysToRemove = [];
+        for (let item of this.state.events) {
+            await super.dispatch(item);
+        }
+        this.destroy();
     }
 
     // --------------------------------------------------------------------------
@@ -61,34 +54,24 @@ export class TransportFabricStubWrapper extends TransportFabricStub {
 
     public async loadKV(iterator: Iterators.StateQueryIterator): Promise<Array<IKeyValue>> {
         let items = await super.loadKV(iterator);
-        items = items.filter(item => !this.isKeyRemoved(item.key));
+        this.state.checkKV(items);
         return items;
     }
 
     public async getStateRaw(key: string): Promise<string> {
-        if (this.isKeyRemoved(key)) {
-            return null;
-        }
-        if (this.state.has(key)) {
-            return this.state.get(key);
-        }
-        let item = await super.getStateRaw(key);
-        this.state.set(key, item);
-        return item;
+        return this.state.getState(key);
     }
 
     public async putStateRaw(key: string, item: string): Promise<void> {
-        if (this.isKeyRemoved(key)) {
-            ArrayUtil.remove(this.keysToRemove, key);
-        }
-        this.state.set(key, item);
+        this.state.putState(key, item);
     }
 
     public async removeState(key: string): Promise<void> {
-        if (!this.isKeyRemoved(key)) {
-            this.keysToRemove.push(key);
-        }
-        this.state.delete(key);
+        this.state.removeState(key);
+    }
+
+    public async dispatch<T>(value: ITransportEvent<T>, isNeedValidate: boolean = true): Promise<void> {
+        this.state.dispatch(value, isNeedValidate);
     }
 
     public destroy(): void {
@@ -96,9 +79,9 @@ export class TransportFabricStubWrapper extends TransportFabricStub {
             return;
         }
         super.destroy();
+        this.getStateRawProxy = null;
 
-        this.state.clear();
+        this.state.destroy();
         this.state = null;
-        this.keysToRemove = null;
     }
 }

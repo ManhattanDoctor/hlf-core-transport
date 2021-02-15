@@ -1,1 +1,1 @@
-export * from './ITransportFabricTransactionBatch';
+export * from './TransportFabricSenderBatch';

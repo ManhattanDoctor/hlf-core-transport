@@ -31,13 +31,13 @@ export class TransportFabricSenderFactory extends LoggerWrapper {
 
     public async get(uid: string): Promise<TransportFabricSender> {
         let item = this.items.get(uid);
-        if (!_.isNil(item)) {
-            return item;
+        if (_.isNil(item)) {
+            item = new TransportFabricSender(this.logger, this.settings.get(uid));
+            this.items.set(uid, item);
         }
-
-        item = new TransportFabricSender(this.logger, this.settings.get(uid));
-        this.items.set(uid, item);
-        await item.connect();
+        if (!item.isConnected) {
+            await item.connect();
+        }
         return item;
     }
 }
