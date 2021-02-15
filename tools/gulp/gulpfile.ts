@@ -118,7 +118,7 @@ const packagePublish = async (type: 'patch' | 'minor' | 'major'): Promise<void> 
     // Build package or copy files
     await packageBuild();
     // Commit project
-    // await packageCommit();
+    await packageCommit();
     // Update version of package.js
     await run(`npm --prefix ${projectDirectory} version ${type}`)();
     // Copy package.js
