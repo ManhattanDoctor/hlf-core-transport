@@ -10,24 +10,14 @@
     "license": "ISC",
     "dependencies": {
         "@hlf-core/api": "^1.0.9",
-        "@ts-core/common": "^1.0.154",
+        "@ts-core/common": "^1.0.178",
         "fabric-client": "1.4.7",
         "fabric-network": "1.4.7",
         "fabric-shim": "1.4.5",
         "reflect-metadata": "0.1.13"
     },
     "devDependencies": {
-        "@types/node": "12.12.18",
-        "gulp": "4.0.2",
-        "gulp-clean": "0.4.0",
-        "gulp-typescript": "5.0.1",
-        "del": "5.1.0",
-        "gulp-clean-dir": "1.0.2",
-        "gulp-debug": "4.0.0",
-        "gulp-run-command": "0.0.10",
-        "prettier": "1.19.1",
-        "typescript": "3.4.5",
-        "ts-node": "8.6.2"
+        "gulp-npm-publisher": "1.0.1"
     },
     "repository": {
         "type": "git",
