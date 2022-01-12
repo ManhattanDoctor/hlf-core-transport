@@ -24,7 +24,6 @@ import { TransportFabricCommandOptions } from '../TransportFabricCommandOptions'
 import { TRANSPORT_CHAINCODE_EVENT, TRANSPORT_FABRIC_METHOD } from '../constants';
 import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload';
 import { ITransportFabricConnectionSettings } from './ITransportFabricConnectionSettings';
-import { TransportFabricBlockParser } from './block';
 
 export class TransportFabricSender<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends Transport<T> {
     // --------------------------------------------------------------------------
@@ -267,7 +266,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
 
     // --------------------------------------------------------------------------
     //
-    //  Recevie Message Methods
+    //  Receive Message Methods
     //
     // --------------------------------------------------------------------------
 

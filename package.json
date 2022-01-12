@@ -9,15 +9,15 @@
     },
     "license": "ISC",
     "dependencies": {
-        "@hlf-core/api": "^1.0.9",
-        "@ts-core/common": "^1.0.178",
-        "fabric-client": "1.4.7",
-        "fabric-network": "1.4.7",
-        "fabric-shim": "1.4.5",
-        "reflect-metadata": "0.1.13"
+        "@ts-core/common": "^1.0.187",
+        "@hlf-core/api": "^1.0.10",
+        "fabric-client": "^1.4.18",
+        "fabric-network": "^1.4.18",
+        "fabric-shim": "^1.4.6",
+        "reflect-metadata": "^0.1.13"
     },
     "devDependencies": {
-        "gulp-npm-publisher": "1.0.1"
+        "gulp-npm-publisher": "^1.0.3"
     },
     "repository": {
         "type": "git",
