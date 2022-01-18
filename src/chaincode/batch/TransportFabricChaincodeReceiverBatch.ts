@@ -33,7 +33,7 @@ export class TransportFabricChaincodeReceiverBatch extends TransportFabricChainc
 
     // --------------------------------------------------------------------------
     //
-    //  Recevie Message Methods
+    //  Receive Message Methods
     //
     // --------------------------------------------------------------------------
 

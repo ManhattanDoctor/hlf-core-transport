@@ -7,6 +7,7 @@
         "name": "Renat Gubaev",
         "email": "renat.gubaev@gmail.com"
     },
+    
     "license": "ISC",
     "dependencies": {
         "@hlf-core/api": "^2.0.5",
