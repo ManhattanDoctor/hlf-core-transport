@@ -51,8 +51,8 @@ export class TransportFabricBlockParserBatch
         let payload = TransformUtil.toClass(TransportFabricResponsePayload, batchTransaction.response);
         let transactions = (item.transactions = [batchTransaction]);
         for (let hash in payload.response) {
-            let original = await this.api.getTransaction(hash);
-            let blockMined = await this.api.getBlockByTxID(hash);
+            let original = await this.api.qsccContract.getTransaction(hash);
+            let blockMined = await this.api.qsccContract.getBlockByTransactionId(hash);
 
             let transaction = this.parseTransaction(original);
             transaction.blockMined = blockMined.number;

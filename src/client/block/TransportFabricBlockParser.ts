@@ -1,4 +1,4 @@
-import { BlockData } from 'fabric-client';
+import { BlockData } from 'fabric-common';
 import { ITransportFabricBlock } from './ITransportFabricBlock';
 import * as _ from 'lodash';
 import { ITransportFabricTransaction } from './ITransportFabricTransaction';

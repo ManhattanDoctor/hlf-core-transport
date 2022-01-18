@@ -1,7 +1,7 @@
 {
     "name": "@hlf-core/transport",
-    "version": "1.0.56",
-    "description": "Hyperledger transport",
+    "version": "2.0.0",
+    "description": "Hyperledger Fabric Transport",
     "main": "index.js",
     "author": {
         "name": "Renat Gubaev",
@@ -9,11 +9,10 @@
     },
     "license": "ISC",
     "dependencies": {
+        "@hlf-core/api": "^2.0.5",
         "@ts-core/common": "^1.0.187",
-        "@hlf-core/api": "^1.0.10",
-        "fabric-client": "^1.4.18",
-        "fabric-network": "^1.4.18",
-        "fabric-shim": "^1.4.6",
+        "fabric-network": "^2.2.11",
+        "fabric-shim": "^2.2.2",
         "reflect-metadata": "^0.1.13"
     },
     "devDependencies": {

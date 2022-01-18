@@ -14,9 +14,9 @@ import {
     TransportTimeoutError
 } from '@ts-core/common/transport';
 import { DateUtil, ObjectUtil, TransformUtil, ValidateUtil } from '@ts-core/common/util';
-import { ContractEventListener, BlockEventListener, Transaction } from 'fabric-network';
+import { ContractListener, BlockListener, Transaction, BlockEvent, ContractEvent } from 'fabric-network';
 import * as _ from 'lodash';
-import { FabricApiClient } from '@hlf-core/api';
+import { Block, FabricApiClient, IFabricBlock } from '@hlf-core/api';
 import { TransportFabricResponsePayload } from '../TransportFabricResponsePayload';
 import { ITransportFabricCommandOptions } from '../ITransportFabricCommandOptions';
 import { ITransportFabricRequestOptions } from '../ITransportFabricRequestOptions';
@@ -66,14 +66,14 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     //
     // --------------------------------------------------------------------------
 
-    private blockEvent: BlockEventListener;
-    private contractEvent: ContractEventListener;
+    protected blockEvent: BlockListener;
+    protected contractEvent: ContractListener;
 
-    private connectionPromise: PromiseHandler<void, ExtendedError>;
-    private connectionAttempts: number;
+    protected connectionPromise: PromiseHandler<void, ExtendedError>;
+    protected connectionAttempts: number;
 
-    private _api: FabricApiClient;
-    private _isConnected: boolean;
+    protected _api: FabricApiClient;
+    protected _isConnected: boolean;
 
     // --------------------------------------------------------------------------
     //
@@ -83,7 +83,6 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
 
     constructor(logger: ILogger, settings: T, context?: string) {
         super(logger, settings, context);
-
         this._api = new FabricApiClient(logger, settings);
     }
 
@@ -124,18 +123,18 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
             this.connectionPromise = null;
         }
 
-        this.api.disconnect();
-        this._isConnected = false;
-
         if (!_.isNil(this.contractEvent)) {
-            this.contractEvent.unregister();
+            this.api.contract.removeContractListener(this.contractEvent);
             this.contractEvent = null;
         }
 
         if (!_.isNil(this.blockEvent)) {
-            this.blockEvent.unregister();
+            this.api.network.removeBlockListener(this.blockEvent);
             this.blockEvent = null;
         }
+
+        this.api.disconnect();
+        this._isConnected = false;
 
         if (!_.isNil(error)) {
             this.error(error);
@@ -358,18 +357,18 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     //
     // --------------------------------------------------------------------------
 
-    private blockEventCallbackProxy = (error: Error, event: any): void => {
-        this.blockEventCallback(error, event);
+    private blockEventCallbackProxy = async (event: BlockEvent): Promise<void> => {
+        this.blockEventCallback(FabricApiClient.parseBlock(event.blockData as Block));
     };
 
-    private contractEventCallbackProxy = (error: Error, event: any): void => {
-        this.contractEventCallback(error, event);
+    private contractEventCallbackProxy = async (event: ContractEvent): Promise<void> => {
+        this.contractEventCallback(event);
     };
 
     protected async connectionCompleteHandler(): Promise<void> {
         this._isConnected = true;
-        this.blockEvent = await this.api.network.addBlockListener('blockListener', this.blockEventCallbackProxy);
-        this.contractEvent = await this.api.contract.addContractListener(TRANSPORT_CHAINCODE_EVENT, TRANSPORT_CHAINCODE_EVENT, this.contractEventCallbackProxy);
+        this.blockEvent = await this.api.network.addBlockListener(this.blockEventCallbackProxy);
+        this.contractEvent = await this.api.contract.addContractListener(this.contractEventCallbackProxy);
         if (!_.isNil(this.connectionPromise)) {
             this.connectionPromise.resolve();
         }
@@ -379,27 +378,9 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
         this.disconnect(error);
     }
 
-    protected async blockEventCallback(error: Error, block: any): Promise<void> {
-        if (!_.isNil(error)) {
-            this.error(error);
-            return;
-        }
-        if (_.isNil(block)) {
-            this.warn(`Received nil block`);
-            return;
-        }
-    }
+    protected async blockEventCallback(event: IFabricBlock): Promise<void> {}
 
-    protected async contractEventCallback(error: Error, event: any): Promise<void> {
-        if (!_.isNil(error)) {
-            this.error(error);
-            return;
-        }
-        if (_.isNil(event)) {
-            this.warn(`Received nil event`);
-            return;
-        }
-    }
+    protected async contractEventCallback(event: ContractEvent): Promise<void> {}
 
     // --------------------------------------------------------------------------
     //

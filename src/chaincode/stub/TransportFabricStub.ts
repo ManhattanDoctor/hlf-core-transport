@@ -100,7 +100,7 @@ export class TransportFabricStub extends Destroyable implements ITransportFabric
 
     public async getStateRaw(key: string): Promise<string> {
         let item = await this.stub.getState(key);
-        return !_.isNil(item) && item.length > 0 ? item.toString(TransformUtil.ENCODING) : null;
+        return !_.isNil(item) && item.length > 0 ? Buffer.from(item).toString(TransformUtil.ENCODING) : null;
     }
 
     public async putState<U>(
@@ -157,7 +157,7 @@ export class TransportFabricStub extends Destroyable implements ITransportFabric
             let response = await iterator.next();
             let item = response.value;
             if (!_.isNil(item) && !_.isNil(item.key)) {
-                items.push({ key: item.key, value: !_.isNil(item.value) ? item.value.toString(TransformUtil.ENCODING) : null });
+                items.push({ key: item.key, value: !_.isNil(item.value) ? Buffer.from(item.value).toString(TransformUtil.ENCODING) : null });
             }
             if (response.done) {
                 await iterator.close();
@@ -172,7 +172,7 @@ export class TransportFabricStub extends Destroyable implements ITransportFabric
         return {
             items: await this.loadKV(response.iterator),
             pageSize: request.pageSize,
-            isAllLoaded: response.metadata.fetched_records_count < request.pageSize,
+            isAllLoaded: response.metadata.fetchedRecordsCount < request.pageSize,
             pageBookmark: response.metadata.bookmark
         };
     }

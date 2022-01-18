@@ -8,6 +8,9 @@ import { ITransportFabricConnectionSettings } from '../ITransportFabricConnectio
 import { TransportFabricSender } from '../TransportFabricSender';
 import { ITransportFabricCommandOptions } from '../../ITransportFabricCommandOptions';
 import { TransportFabricResponsePayload } from '../../TransportFabricResponsePayload';
+import { BlockEvent } from 'fabric-network';
+import { TransportFabricBlockParser } from '../block';
+import { ILogger } from '@ts-core/common/logger';
 
 export class TransportFabricSenderBatch<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends TransportFabricSender<T> {
     // --------------------------------------------------------------------------
@@ -41,11 +44,8 @@ export class TransportFabricSenderBatch<T extends ITransportFabricConnectionSett
         }
     }
 
-    protected async blockEventCallback(error: Error, rawBlock: IFabricBlock): Promise<void> {
-        await super.blockEventCallback(error, rawBlock);
-        if (!_.isNil(error)) {
-            return;
-        }
+    protected async blockEventCallback(block: IFabricBlock): Promise<void> {
+        await super.blockEventCallback(block);
 
         if (this.isFirstBlockEvent) {
             this.isFirstBlockEvent = false;
@@ -53,7 +53,7 @@ export class TransportFabricSenderBatch<T extends ITransportFabricConnectionSett
         }
 
         let parser = new TransportFabricBlockParserBatch(this.api);
-        let parsedBlock = await parser.parse(rawBlock);
+        let parsedBlock = await parser.parse(block);
         if (!parsedBlock.isBatch) {
             return;
         }
