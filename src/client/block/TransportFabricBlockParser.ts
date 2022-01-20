@@ -76,8 +76,7 @@ export class TransportFabricBlockParser<
         }
 
         let metadata = block.metadata.metadata;
-        let validationCodes = _.isArray(metadata) && !_.isEmpty(metadata) ? metadata[metadata.length - 1] : [];
-
+        let validationCodes = _.isArray(metadata) && metadata.length >= 3 ? metadata[2] : [];
         for (let i = 0; i < block.data.data.length; i++) {
             let transaction = this.parseTransactionBlockData(block.data.data[i]);
             if (!_.isNil(transaction)) {
@@ -164,7 +163,7 @@ export class TransportFabricBlockParser<
         if (_.isNil(response) || _.isNil(response.payload)) {
             return;
         }
-        transaction.response = TransformUtil.toJSON(response.payload);
+        transaction.response = TransformUtil.toJSON(response.payload.toString());
     }
 
     // --------------------------------------------------------------------------

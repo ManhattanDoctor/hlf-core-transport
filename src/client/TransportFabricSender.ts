@@ -35,8 +35,10 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     protected static parseChaincodeError<U>(command: ITransportCommand<U>, error: any): ExtendedError {
         let defaultError = new ExtendedError(`Unable to send "${command.name}" command request: ${error.message}`);
         let item = null;
-        if (!_.isEmpty(error.responses)) {
-            item = error.responses[0];
+        if (!_.isNil(error.response)) {
+            item = error.response;
+        } else if (!_.isEmpty(error.responses)) {
+            item = error.responses[0].response;
         } else if (!_.isEmpty(error.endorsements)) {
             item = error.endorsements[0];
         }
@@ -47,7 +49,7 @@ export class TransportFabricSender<T extends ITransportFabricConnectionSettings 
     }
 
     protected static parseError(error: any): ExtendedError {
-        let message = error.message.replace('transaction returned with failure:', '').trim();
+        let message = error.message.replace('error in simulation: transaction returned with failure:', '').trim();
         if (!ObjectUtil.isJSON(message)) {
             return null;
         }
