@@ -1,5 +1,4 @@
-import { TransformUtil, ValidateUtil, ObjectUtil, DateUtil } from '@ts-core/common/util';
-import { ClassType } from 'class-transformer/ClassTransformer';
+import { TransformUtil, ClassType, ValidateUtil, ObjectUtil, DateUtil } from '@ts-core/common/util';
 import { ChaincodeStub, Iterators, StateQueryResponse } from 'fabric-shim';
 import * as _ from 'lodash';
 import { IKeyValue, ITransportFabricStub } from './ITransportFabricStub';

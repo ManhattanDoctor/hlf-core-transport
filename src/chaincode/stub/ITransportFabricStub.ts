@@ -1,6 +1,6 @@
-import { ClassType } from 'class-transformer/ClassTransformer';
 import { ChaincodeStub, Iterators, StateQueryResponse } from 'fabric-shim';
 import { IDestroyable } from '@ts-core/common';
+import { ClassType } from '@ts-core/common/util';
 import { ITransportEvent } from '@ts-core/common/transport';
 import { IPageBookmark, IPaginationBookmark } from '@ts-core/common/dto';
 

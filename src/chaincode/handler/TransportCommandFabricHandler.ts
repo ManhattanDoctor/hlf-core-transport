@@ -38,5 +38,5 @@ export abstract class TransportCommandFabricHandler<U, T extends ITransportComma
     //
     // --------------------------------------------------------------------------
 
-    protected abstract async execute(request: U, ...params): Promise<any>;
+    protected abstract execute(request: U, ...params): Promise<any>;
 }
