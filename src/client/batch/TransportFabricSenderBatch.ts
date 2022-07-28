@@ -8,9 +8,6 @@ import { ITransportFabricConnectionSettings } from '../ITransportFabricConnectio
 import { TransportFabricSender } from '../TransportFabricSender';
 import { ITransportFabricCommandOptions } from '../../ITransportFabricCommandOptions';
 import { TransportFabricResponsePayload } from '../../TransportFabricResponsePayload';
-import { BlockEvent } from 'fabric-network';
-import { TransportFabricBlockParser } from '../block';
-import { ILogger } from '@ts-core/common/logger';
 
 export class TransportFabricSenderBatch<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends TransportFabricSender<T> {
     // --------------------------------------------------------------------------
