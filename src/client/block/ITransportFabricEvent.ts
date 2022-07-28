@@ -1,5 +1,5 @@
 import { FabricTransactionValidationCode } from '@hlf-core/api';
-import { ITransportEvent } from '@ts-core/common/transport';
+import { ITransportEvent } from '@ts-core/common';
 
 export interface ITransportFabricEvent<T = any> extends ITransportEvent<T> {
     channel: string;

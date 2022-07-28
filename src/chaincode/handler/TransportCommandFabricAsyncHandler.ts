@@ -1,5 +1,5 @@
 import { TransportCommandFabricHandler } from './TransportCommandFabricHandler';
-import { ITransportCommandAsync } from '@ts-core/common/transport';
+import { ITransportCommandAsync } from '@ts-core/common';
 
 export abstract class TransportCommandFabricAsyncHandler<U, V, T extends ITransportCommandAsync<U, V>> extends TransportCommandFabricHandler<U, T> {
     // --------------------------------------------------------------------------

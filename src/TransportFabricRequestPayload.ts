@@ -1,5 +1,5 @@
-import { TransportInvalidDataError } from '@ts-core/common/transport/error';
-import { TransformUtil, ValidateUtil } from '@ts-core/common/util';
+import { TransportInvalidDataError } from '@ts-core/common';
+import { TransformUtil, ValidateUtil } from '@ts-core/common';
 import { IsBoolean, IsOptional, ValidateNested, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ChaincodeStub } from 'fabric-shim';
@@ -7,8 +7,8 @@ import { TRANSPORT_FABRIC_METHOD } from './constants';
 import { ITransportFabricRequestPayload } from './ITransportFabricRequestPayload';
 import { TransportFabricCommandOptions } from './TransportFabricCommandOptions';
 import * as _ from 'lodash';
-import { ITransportCommandOptions, Transport } from '@ts-core/common/transport';
-import { TransportCryptoManagerEd25519 } from '@ts-core/common/transport/crypto';
+import { ITransportCommandOptions, Transport } from '@ts-core/common';
+import { TransportCryptoManagerEd25519 } from '@ts-core/common';
 import { ITransportFabricCommandOptions } from './ITransportFabricCommandOptions';
 
 export class TransportFabricRequestPayload<U = any> implements ITransportFabricRequestPayload<U> {

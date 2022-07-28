@@ -1,7 +1,7 @@
-import { ExtendedError } from '@ts-core/common/error';
-import { ITransportCommand } from '@ts-core/common/transport';
+import { ExtendedError } from '@ts-core/common';
+import { ITransportCommand } from '@ts-core/common';
 import * as _ from 'lodash';
-import { TransformUtil } from '@ts-core/common/util';
+import { TransformUtil } from '@ts-core/common';
 import { TransportFabricBlockParserBatch } from './block/TransportFabricBlockParserBatch';
 import { IFabricBlock } from '@hlf-core/api';
 import { ITransportFabricConnectionSettings } from '../ITransportFabricConnectionSettings';

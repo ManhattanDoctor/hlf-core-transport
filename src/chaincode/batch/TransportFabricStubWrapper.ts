@@ -1,4 +1,4 @@
-import { ITransportEvent, ITransportReceiver } from '@ts-core/common/transport';
+import { ITransportEvent, ITransportReceiver } from '@ts-core/common';
 import { ChaincodeStub, Iterators } from 'fabric-shim';
 import * as _ from 'lodash';
 import { ITransportFabricCommandOptions } from '../../ITransportFabricCommandOptions';

@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { TransportFabricStubWrapper } from './TransportFabricStubWrapper';
 import { Iterators, StateQueryResponse } from 'fabric-shim';
-import { ITransportCommand, ITransportEvent, Transport } from '@ts-core/common/transport';
+import { ITransportCommand, ITransportEvent, Transport } from '@ts-core/common';
 import { StateProxy } from './StateProxy';
 import { IKeyValue, TransportFabricStub } from '../stub';
 import { ITransportFabricRequestPayload } from '../../ITransportFabricRequestPayload';

@@ -1,6 +1,6 @@
-import { ILogger, LoggerWrapper } from '@ts-core/common/logger';
+import { ILogger, LoggerWrapper } from '@ts-core/common';
 import * as _ from 'lodash';
-import { IPaginationBookmark, IPageBookmark } from '@ts-core/common/dto';
+import { IPaginationBookmark, IPageBookmark } from '@ts-core/common';
 import { IKeyValue, ITransportFabricStub } from '../stub';
 
 export class DatabaseManager extends LoggerWrapper {

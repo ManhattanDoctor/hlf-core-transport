@@ -2,7 +2,7 @@ import { BlockData } from 'fabric-common';
 import { ITransportFabricBlock } from './ITransportFabricBlock';
 import * as _ from 'lodash';
 import { ITransportFabricTransaction } from './ITransportFabricTransaction';
-import { TransformUtil, ObjectUtil } from '@ts-core/common/util';
+import { TransformUtil, ObjectUtil } from '@ts-core/common';
 import { IFabricBlock, IFabricTransaction } from '@hlf-core/api';
 import { ITransportFabricEvent } from './ITransportFabricEvent';
 import { TRANSPORT_FABRIC_METHOD, TRANSPORT_CHAINCODE_EVENT } from '../../constants';

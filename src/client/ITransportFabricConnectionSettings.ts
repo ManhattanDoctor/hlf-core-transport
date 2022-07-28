@@ -1,5 +1,5 @@
 import { IFabricConnectionSettings } from '@hlf-core/api';
-import { ITransportSettings } from '@ts-core/common/transport';
+import { ITransportSettings } from '@ts-core/common';
 
 export interface ITransportFabricConnectionSettings extends IFabricConnectionSettings, ITransportSettings {
     reconnectDelay?: number;

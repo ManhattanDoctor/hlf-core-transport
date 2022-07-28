@@ -1,8 +1,8 @@
 import { ITransportFabricStub } from './ITransportFabricStub';
-import { IDestroyable } from '@ts-core/common/IDestroyable';
+import { IDestroyable } from '@ts-core/common';
 import * as _ from 'lodash';
 import 'reflect-metadata';
-import { ExtendedError } from '@ts-core/common/error';
+import { ExtendedError } from '@ts-core/common';
 
 export interface ITransportFabricStubHolder extends IDestroyable {
     readonly stub: ITransportFabricStub;

@@ -1,4 +1,4 @@
-import { Logger, LoggerWrapper } from '@ts-core/common/logger';
+import { Logger, LoggerWrapper } from '@ts-core/common';
 import * as _ from 'lodash';
 import { TransportFabricSender } from '../TransportFabricSender';
 import { TransportFabricConnectionSettingsFactory } from './TransportFabricConnectionSettingsFactory';

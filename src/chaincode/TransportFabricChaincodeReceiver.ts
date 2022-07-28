@@ -1,6 +1,6 @@
-import { ExtendedError } from '@ts-core/common/error';
-import { ILogger } from '@ts-core/common/logger';
-import { PromiseHandler } from '@ts-core/common/promise';
+import { ExtendedError } from '@ts-core/common';
+import { ILogger } from '@ts-core/common';
+import { PromiseHandler } from '@ts-core/common';
 import { Observable } from 'rxjs';
 import {
     ITransportCommand,
@@ -13,16 +13,16 @@ import {
     ITransportCommandAsync,
     TransportCommandAsync,
     ITransportReceiver
-} from '@ts-core/common/transport';
-import { TransportWaitExceedError } from '@ts-core/common/transport/error';
-import { DateUtil, ObjectUtil } from '@ts-core/common/util';
+} from '@ts-core/common';
+import { TransportWaitExceedError } from '@ts-core/common';
+import { DateUtil, ObjectUtil } from '@ts-core/common';
 import { ChaincodeStub } from 'fabric-shim';
 import * as _ from 'lodash';
 import { TransportFabricResponsePayload } from '../TransportFabricResponsePayload';
 import { TransportFabricRequestPayload } from '../TransportFabricRequestPayload';
-import { ISignature } from '@ts-core/common/crypto';
-import { IDestroyable } from '@ts-core/common/IDestroyable';
-import { ITransportCryptoManager } from '@ts-core/common/transport/crypto';
+import { ISignature } from '@ts-core/common';
+import { IDestroyable } from '@ts-core/common';
+import { ITransportCryptoManager } from '@ts-core/common';
 import { ITransportFabricStub, TransportFabricStub } from './stub';
 import { TransportFabricChaincodeCommandWrapper } from './TransportFabricChaincodeCommandWrapper';
 import { ITransportFabricRequestPayload } from '../ITransportFabricRequestPayload';

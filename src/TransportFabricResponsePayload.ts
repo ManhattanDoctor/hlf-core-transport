@@ -1,7 +1,7 @@
-import { ExtendedError } from '@ts-core/common/error';
-import { ITransportCommand, Transport } from '@ts-core/common/transport';
-import { TransportInvalidDataError } from '@ts-core/common/transport/error/TransportInvalidDataError';
-import { TransformUtil, ValidateUtil } from '@ts-core/common/util';
+import { ExtendedError } from '@ts-core/common';
+import { ITransportCommand, Transport } from '@ts-core/common';
+import { TransportInvalidDataError } from '@ts-core/common';
+import { TransformUtil, ValidateUtil } from '@ts-core/common';
 import { IsOptional, IsString } from 'class-validator';
 import * as _ from 'lodash';
 import { ITransportFabricResponsePayload } from './ITransportFabricResponsePayload';

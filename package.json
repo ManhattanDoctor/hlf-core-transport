@@ -1,23 +1,30 @@
 {
     "name": "@hlf-core/transport",
-    "version": "2.0.6",
+    "version": "3.0.0",
     "description": "Hyperledger Fabric Transport",
-    "main": "index.js",
+    "main": "./cjs/public-api.js",
+    "module": "./esm/public-api.js",
+    "exports": {
+        ".": {
+            "import": "./esm/public-api.js",
+            "require": "./cjs/public-api.js"
+        }
+    },
     "author": {
         "name": "Renat Gubaev",
         "email": "renat.gubaev@gmail.com"
     },
     "license": "ISC",
     "dependencies": {
-        "@hlf-core/api": "^2.0.9",
-        "@ts-core/common": "^2.0.5",
+        "@hlf-core/api": "^3.0.1",
+        "@ts-core/common": "^3.0.3",
         "fabric-network": "^2.2.11",
         "fabric-shim": "^2.2.2",
         "reflect-metadata": "^0.1.13"
     },
     "devDependencies": {
         "@types/node": "^14.18.12",
-        "gulp-npm-publisher": "^2.0.2"
+        "gulp-npm-module-publisher": "^3.0.0"
     },
     "repository": {
         "type": "git",

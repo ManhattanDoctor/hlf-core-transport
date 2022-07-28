@@ -1,7 +1,7 @@
-import { ITransportCommand, ITransportCommandAsync, Transport } from '@ts-core/common/transport';
+import { ITransportCommand, ITransportCommandAsync, Transport } from '@ts-core/common';
 import { ITransportFabricStub, ITransportFabricStubHolder } from '../chaincode/stub';
 import * as _ from 'lodash';
-import { ExtendedError } from '@ts-core/common/error';
+import { ExtendedError } from '@ts-core/common';
 import { ITransportFabricRequestPayload } from '../ITransportFabricRequestPayload';
 
 export class TransportFabricChaincodeCommandWrapper<U = any, V = any> implements ITransportCommandAsync<U, V>, ITransportFabricStubHolder {

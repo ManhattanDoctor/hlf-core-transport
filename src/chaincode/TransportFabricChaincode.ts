@@ -1,7 +1,7 @@
-import { ExtendedError } from '@ts-core/common/error';
-import { ILogger, LoggerWrapper } from '@ts-core/common/logger';
-import { ObservableData } from '@ts-core/common/observer';
-import { TransformUtil } from '@ts-core/common/util';
+import { ExtendedError } from '@ts-core/common';
+import { ILogger, LoggerWrapper } from '@ts-core/common';
+import { ObservableData } from '@ts-core/common';
+import { TransformUtil } from '@ts-core/common';
 import * as shim from 'fabric-shim';
 import { ChaincodeInterface, ChaincodeResponse, ChaincodeStub } from 'fabric-shim';
 import * as _ from 'lodash';

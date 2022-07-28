@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
 import { FabricApiClient, FabricTransactionValidationCode, IFabricBlock } from '@hlf-core/api';
 import { IDestroyable } from '@ts-core/common';
-import { ExtendedError } from '@ts-core/common/error';
-import { TransformUtil } from '@ts-core/common/util';
+import { ExtendedError } from '@ts-core/common';
+import { TransformUtil } from '@ts-core/common';
 import { ITransportFabricBlockBatch } from './ITransportFabricBlockBatch';
 import { ITransportFabricEvent, TransportFabricBlockParser } from '../../block';
 import { ITransportFabricTransactionBatch } from './ITransportFabricTransactionBatch';

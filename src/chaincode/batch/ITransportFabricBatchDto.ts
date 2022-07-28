@@ -1,4 +1,4 @@
-import { ExtendedError } from '@ts-core/common/error';
+import { ExtendedError } from '@ts-core/common';
 import { ITransportFabricResponsePayload } from '../../ITransportFabricResponsePayload';
 
 export interface ITransportFabricBatchDto {

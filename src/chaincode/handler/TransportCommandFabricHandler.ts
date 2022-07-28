@@ -1,5 +1,5 @@
-import { ILogger } from '@ts-core/common/logger';
-import { AbstractTransportCommandHandler, ITransportCommand, ITransport } from '@ts-core/common/transport';
+import { ILogger } from '@ts-core/common';
+import { AbstractTransportCommandHandler, ITransportCommand, ITransport } from '@ts-core/common';
 
 export abstract class TransportCommandFabricHandler<U, T extends ITransportCommand<U>> extends AbstractTransportCommandHandler<U, T> {
     // --------------------------------------------------------------------------

@@ -1,10 +1,10 @@
-import { ILogger } from '@ts-core/common/logger';
+import { ILogger } from '@ts-core/common';
 import * as _ from 'lodash';
-import { IPaginableBookmark, IPaginationBookmark, getUid } from '@ts-core/common/dto';
+import { IPaginableBookmark, IPaginationBookmark, getUid } from '@ts-core/common';
 import { DatabaseManager } from '../DatabaseManager';
-import { TransformUtil } from '@ts-core/common/util';
+import { TransformUtil } from '@ts-core/common';
 import { IKeyValue, ITransportFabricStub } from '../../stub';
-import { UID, IUIDable } from '@ts-core/common/dto';
+import { UID, IUIDable } from '@ts-core/common';
 
 export abstract class EntityManager<U extends IUIDable> extends DatabaseManager {
     // --------------------------------------------------------------------------

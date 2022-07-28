@@ -1,8 +1,8 @@
 import { ChaincodeStub, Iterators, StateQueryResponse } from 'fabric-shim';
 import { IDestroyable } from '@ts-core/common';
-import { ClassType } from '@ts-core/common/util';
-import { ITransportEvent } from '@ts-core/common/transport';
-import { IPageBookmark, IPaginationBookmark } from '@ts-core/common/dto';
+import { ClassType } from '@ts-core/common';
+import { ITransportEvent } from '@ts-core/common';
+import { IPageBookmark, IPaginationBookmark } from '@ts-core/common';
 
 export interface ITransportFabricStub extends IDestroyable {
     // readonly stub: ChaincodeStub;
