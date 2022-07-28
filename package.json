@@ -16,10 +16,10 @@
     },
     "license": "ISC",
     "dependencies": {
-        "@hlf-core/api": "^3.0.1",
+        "@hlf-core/api": "^3.0.2",
         "@ts-core/common": "^3.0.3",
-        "fabric-network": "^2.2.11",
-        "fabric-shim": "^2.2.2",
+        "fabric-network": "^2.2.14",
+        "fabric-shim": "^2.2.3",
         "reflect-metadata": "^0.1.13"
     },
     "devDependencies": {
