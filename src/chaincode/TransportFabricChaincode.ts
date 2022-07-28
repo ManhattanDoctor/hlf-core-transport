@@ -38,7 +38,7 @@ export abstract class TransportFabricChaincode<T> extends LoggerWrapper implemen
     public async Init(stub: ChaincodeStub): Promise<ChaincodeResponse> {
         this.debug(`Chaincode "${this.name}" inited`);
         this.observer.next(new ObservableData(TransportFabricChaincodeEvent.INITED, { stub }));
-        return shim.success();
+        return shim.success(Buffer.from(''));
     }
 
     public async Invoke(stub: ChaincodeStub): Promise<ChaincodeResponse> {
