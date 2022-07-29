@@ -18,7 +18,6 @@
     "dependencies": {
         "@hlf-core/api": "^3.0.4",
         "@ts-core/common": "^3.0.3",
-        "fabric-network": "^2.2.11",
         "fabric-shim": "^2.2.2",
         "reflect-metadata": "^0.1.13"
     },

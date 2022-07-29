@@ -2,7 +2,7 @@ import { ExtendedError } from '@ts-core/common';
 import { ILogger, LoggerWrapper } from '@ts-core/common';
 import { ObservableData } from '@ts-core/common';
 import { TransformUtil } from '@ts-core/common';
-import * as shim from 'fabric-shim';
+import { Shim } from 'fabric-shim';
 import { ChaincodeInterface, ChaincodeResponse, ChaincodeStub } from 'fabric-shim';
 import * as _ from 'lodash';
 import { Observable, Subject } from 'rxjs';
@@ -38,7 +38,7 @@ export abstract class TransportFabricChaincode<T> extends LoggerWrapper implemen
     public async Init(stub: ChaincodeStub): Promise<ChaincodeResponse> {
         this.debug(`Chaincode "${this.name}" inited`);
         this.observer.next(new ObservableData(TransportFabricChaincodeEvent.INITED, { stub }));
-        return shim.success(Buffer.from(''));
+        return Shim.success(Buffer.from(''));
     }
 
     public async Invoke(stub: ChaincodeStub): Promise<ChaincodeResponse> {
@@ -58,7 +58,7 @@ export abstract class TransportFabricChaincode<T> extends LoggerWrapper implemen
         this.observer.next(new ObservableData(TransportFabricChaincodeEvent.INVOKE_FINISHED, event));
 
         let content = this.getContent(response);
-        return isError ? shim.error(content) : shim.success(content);
+        return isError ? Shim.error(content) : Shim.success(content);
     }
 
     // --------------------------------------------------------------------------
