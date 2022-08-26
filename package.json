@@ -16,7 +16,7 @@
     },
     "license": "ISC",
     "peerDependencies": {
-        "@hlf-core/api": "^3.0.6",
+        "@hlf-core/api": "^3.0.13",
         "fabric-shim": "^2.2.2",
         "reflect-metadata": "^0.1.13"
     },
