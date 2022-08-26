@@ -15,10 +15,9 @@
         "email": "renat.gubaev@gmail.com"
     },
     "license": "ISC",
-    "dependencies": {
-        "@hlf-core/api": "^3.0.5",
-        "@ts-core/common": "^3.0.3",
-        "fabric-shim": "^2.4.2",
+    "peerDependencies": {
+        "@hlf-core/api": "^3.0.6",
+        "fabric-shim": "^2.2.2",
         "reflect-metadata": "^0.1.13"
     },
     "devDependencies": {
