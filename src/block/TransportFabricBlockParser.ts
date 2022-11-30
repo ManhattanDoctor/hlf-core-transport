@@ -18,7 +18,7 @@ export class TransportFabricBlockParser<
     //
     // --------------------------------------------------------------------------
 
-    public static parseEvents<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, payload: any): Array<V> {
+    public static parseEvents<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, payload: any, requestId: string): Array<V> {
         let items: Array<V> = [];
         if (name !== TRANSPORT_CHAINCODE_EVENT) {
             if (ObjectUtil.isJSON(payload)) {
@@ -27,9 +27,9 @@ export class TransportFabricBlockParser<
                     payload = payload.data;
                 }
             }
-            items = [TransportFabricBlockParser.createEvent(name, header, chaincode, payload)];
+            items = [TransportFabricBlockParser.createEvent(name, header, chaincode, payload, requestId)];
         } else {
-            items = TransformUtil.toJSONMany(JSON.parse(payload)).map(item => TransportFabricBlockParser.createEvent(item.name, header, chaincode, item.data));
+            items = TransformUtil.toJSONMany(JSON.parse(payload)).map(item => TransportFabricBlockParser.createEvent(item.name, header, chaincode, item.data, requestId));
         }
         return items.filter(item => !_.isEmpty(item.name));
     }
@@ -46,14 +46,14 @@ export class TransportFabricBlockParser<
         }
     }
 
-    protected static createEvent<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, data: string): V {
+    protected static createEvent<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, data: string, requestId: string): V {
         return {
-            name,
-            chaincode,
-            data,
             channel: header.channel_id,
             transactionHash: header.tx_id,
-            createdDate: new Date(header.timestamp)
+            createdDate: new Date(header.timestamp),
+            name,
+            data,
+            chaincode
         } as any;
     }
 
@@ -83,7 +83,7 @@ export class TransportFabricBlockParser<
                 transaction.validationCode = validationCodes[i];
                 transactions.push(transaction);
             }
-            let event = this.parseEventBlockData(block.data.data[i]);
+            let event = this.parseEventBlockData(block.data.data[i], transaction.request.id);
             if (!_.isEmpty(event)) {
                 events.push(...event);
             }
@@ -172,7 +172,7 @@ export class TransportFabricBlockParser<
     //
     // --------------------------------------------------------------------------
 
-    protected parseEventBlockData(data: BlockData): Array<V> {
+    protected parseEventBlockData(data: BlockData, requestId: string): Array<V> {
         if (_.isNil(data) || _.isNil(data.payload) || _.isNil(data.payload.header) || _.isNil(data.payload.header.channel_header)) {
             return [];
         }
@@ -180,13 +180,13 @@ export class TransportFabricBlockParser<
         let items = [];
         if (!_.isNil(data.payload.data) && !_.isEmpty(data.payload.data.actions)) {
             for (let action of data.payload.data.actions) {
-                items.push(...this.parseEventBlockAction(data.payload.header.channel_header, action));
+                items.push(...this.parseEventBlockAction(data.payload.header.channel_header, action, requestId));
             }
         }
         return items;
     }
 
-    protected parseEventBlockAction(header: any, action: any): Array<V> {
+    protected parseEventBlockAction(header: any, action: any, requestId: string): Array<V> {
         if (
             _.isNil(action.payload.action) ||
             _.isNil(action.payload.action.proposal_response_payload) ||
@@ -197,6 +197,6 @@ export class TransportFabricBlockParser<
         }
 
         let data = action.payload.action.proposal_response_payload.extension.events;
-        return TransportFabricBlockParser.parseEvents(data.event_name, header, data.chaincode_id, data.payload.toString());
+        return TransportFabricBlockParser.parseEvents(data.event_name, header, data.chaincode_id, data.payload.toString(), requestId);
     }
 }
