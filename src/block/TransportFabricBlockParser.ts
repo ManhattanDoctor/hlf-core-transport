@@ -84,7 +84,8 @@ export class TransportFabricBlockParser<
                 transaction.validationCode = validationCodes[i];
                 transactions.push(transaction);
             }
-            let event = this.parseEventBlockData(block.data.data[i], transaction.request.id);
+            let requestId = !_.isNil(transaction.request) ? transaction.request.id : null;
+            let event = this.parseEventBlockData(block.data.data[i], requestId);
             if (!_.isEmpty(event)) {
                 events.push(...event);
             }
