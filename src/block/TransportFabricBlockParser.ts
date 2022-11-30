@@ -53,8 +53,9 @@ export class TransportFabricBlockParser<
             createdDate: new Date(header.timestamp),
             name,
             data,
-            chaincode
-        } as any;
+            chaincode,
+            requestId
+        } as V;
     }
 
     // --------------------------------------------------------------------------
