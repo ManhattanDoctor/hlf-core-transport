@@ -14,11 +14,11 @@ import {
 } from '@ts-core/common';
 import { DateUtil, ObjectUtil, TransformUtil, ValidateUtil } from '@ts-core/common';
 import { ContractListener, BlockListener, Transaction, BlockEvent, ContractEvent } from 'fabric-network';
-import * as _ from 'lodash';
-import { Observable } from 'rxjs';
 import { Block, FabricApiClient, IFabricBlock } from '@hlf-core/api';
 import { ITransportFabricConnectionSettings } from './ITransportFabricConnectionSettings';
 import { ITransportFabricCommandOptions, ITransportFabricRequestOptions, TransportFabricCommandOptions, TransportFabricRequestPayload, TransportFabricResponsePayload, TRANSPORT_FABRIC_METHOD } from '@hlf-core/transport-common';
+import { Observable } from 'rxjs';
+import * as _ from 'lodash';
 
 export class TransportFabric<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends Transport<T> {
     // --------------------------------------------------------------------------
@@ -192,7 +192,6 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
             return;
         }
         super.destroy();
-
         this.disconnect();
         this.requests = null;
     }
@@ -274,7 +273,6 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         }
 
         let payload: TransportFabricResponsePayload = null;
-
         try {
             payload = TransportFabricResponsePayload.parse(data);
         } catch (error) {

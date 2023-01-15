@@ -7,9 +7,7 @@ import { TransportFabricBlockParser } from '../../block/TransportFabricBlockPars
 import { ITransportFabricTransactionBatch } from './ITransportFabricTransactionBatch';
 import { TransportFabricResponsePayload, TRANSPORT_FABRIC_COMMAND_BATCH_NAME } from '@hlf-core/transport-common';
 
-export class TransportFabricBlockParserBatch
-    extends TransportFabricBlockParser<ITransportFabricTransactionBatch, ITransportFabricEvent, ITransportFabricBlockBatch>
-    implements IDestroyable {
+export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<ITransportFabricTransactionBatch, ITransportFabricEvent, ITransportFabricBlockBatch> implements IDestroyable {
     // --------------------------------------------------------------------------
     //
     //  Static Methods

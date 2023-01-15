@@ -4,8 +4,9 @@ import { ITransportFabricTransactionChaincode } from './ITransportFabricTransact
 
 export interface ITransportFabricTransaction<U = any, V = any> {
     hash: string;
+    date: Date;
     channel: string;
-    createdDate: Date;
+    requestId: string;
     chaincode: ITransportFabricTransactionChaincode;
     validationCode: FabricTransactionValidationCode;
 

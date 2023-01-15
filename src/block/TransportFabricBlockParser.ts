@@ -50,7 +50,7 @@ export class TransportFabricBlockParser<
         return {
             channel: header.channel_id,
             transactionHash: header.tx_id,
-            createdDate: new Date(header.timestamp),
+            date: new Date(header.timestamp),
             name,
             data,
             chaincode,
@@ -67,8 +67,8 @@ export class TransportFabricBlockParser<
     public async parse(block: IFabricBlock): Promise<T> {
         let item = {} as any;
         item.hash = block.hash;
+        item.date = block.date;
         item.number = block.number;
-        item.createdDate = block.createdDate;
 
         let events: Array<V> = (item.events = []);
         let transactions: Array<U> = (item.transactions = []);
@@ -115,8 +115,8 @@ export class TransportFabricBlockParser<
 
         let item = {} as any;
         item.hash = header.tx_id;
+        item.date = new Date(header.timestamp);
         item.channel = header.channel_id;
-        item.createdDate = new Date(header.timestamp);
 
         if (!_.isNil(data.payload.data) && !_.isEmpty(data.payload.data.actions)) {
             for (let action of data.payload.data.actions) {
