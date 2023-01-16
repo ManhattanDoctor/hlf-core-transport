@@ -5,6 +5,7 @@ import { IFabricBlock } from '@hlf-core/api';
 import { ITransportFabricConnectionSettings } from '../ITransportFabricConnectionSettings';
 import { TransportFabric } from '../TransportFabric';
 import { ITransportFabricCommandOptions, TransportFabricResponsePayload } from '@hlf-core/transport-common';
+import { TransportFabricBlockParser } from '../block';
 
 export class TransportFabricBatch<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends TransportFabric<T> {
     // --------------------------------------------------------------------------
@@ -40,7 +41,6 @@ export class TransportFabricBatch<T extends ITransportFabricConnectionSettings =
 
     protected async blockEventCallback(block: IFabricBlock): Promise<void> {
         await super.blockEventCallback(block);
-
         if (this.isFirstBlockEvent) {
             this.isFirstBlockEvent = false;
             return;
@@ -48,11 +48,11 @@ export class TransportFabricBatch<T extends ITransportFabricConnectionSettings =
 
         let parser = new TransportFabricBlockParserBatch(this.api);
         let parsedBlock = await parser.parse(block);
-        if (!parsedBlock.isBatch) {
+        let batch = TransportFabricBlockParserBatch.getBatchTransaction(parsedBlock);
+        if (_.isNil(batch) || !TransportFabricBlockParser.isTransactionSucceed(batch)) {
             return;
         }
-        let batchTransaction = TransportFabricBlockParserBatch.getBatchTransaction(parsedBlock);
-        let payload = TransformUtil.toClass(TransportFabricResponsePayload, batchTransaction.response);
+        let payload = TransformUtil.toClass(TransportFabricResponsePayload, batch.response);
         for (let hash in payload.response) {
             let item = TransformUtil.toClass(TransportFabricResponsePayload, payload.response[hash]);
             this.responseMessageReceived(item.id, TransformUtil.fromClassBuffer(item));

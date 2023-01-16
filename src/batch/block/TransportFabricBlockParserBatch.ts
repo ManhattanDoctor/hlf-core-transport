@@ -36,9 +36,7 @@ export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<
     public async parse(block: IFabricBlock): Promise<ITransportFabricBlockBatch> {
         let item = await super.parse(block);
         let batch = TransportFabricBlockParserBatch.getBatchTransaction(item);
-
-        item.isBatch = !_.isNil(batch);
-        if (!item.isBatch || !TransportFabricBlockParserBatch.isTransactionSucceed(batch)) {
+        if (_.isNil(batch) || !TransportFabricBlockParser.isTransactionSucceed(batch)) {
             item.events = [];
             item.transactions = [];
             return item;
