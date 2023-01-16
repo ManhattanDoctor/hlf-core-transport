@@ -1,11 +1,11 @@
 import { BlockData } from 'fabric-common';
 import { ITransportFabricBlock } from './ITransportFabricBlock';
-import * as _ from 'lodash';
 import { ITransportFabricTransaction } from './ITransportFabricTransaction';
-import { TransformUtil, ObjectUtil } from '@ts-core/common';
-import { IFabricBlock, IFabricTransaction } from '@hlf-core/api';
+import { TransformUtil, ObjectUtil, ExtendedError } from '@ts-core/common';
+import { FabricTransactionValidationCode, IFabricBlock, IFabricTransaction } from '@hlf-core/api';
 import { ITransportFabricEvent } from './ITransportFabricEvent';
 import { TRANSPORT_CHAINCODE_EVENT, TRANSPORT_FABRIC_METHOD } from '@hlf-core/transport-common';
+import * as _ from 'lodash';
 
 export class TransportFabricBlockParser<
     U extends ITransportFabricTransaction = ITransportFabricTransaction,
@@ -47,15 +47,19 @@ export class TransportFabricBlockParser<
     }
 
     protected static createEvent<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, data: string, requestId: string): V {
-        return {
-            channel: header.channel_id,
-            transactionHash: header.tx_id,
-            date: new Date(header.timestamp),
-            name,
-            data,
-            chaincode,
-            requestId
-        } as V;
+        return { channel: header.channel_id, transactionHash: header.tx_id, date: new Date(header.timestamp), name, data, chaincode, requestId } as V;
+    }
+
+    public static isTransactionError(item: ITransportFabricTransaction): boolean {
+        return !_.isNil(item) && ExtendedError.instanceOf(item.response);
+    }
+
+    public static isTransactionValid(item: ITransportFabricTransaction): boolean {
+        return !_.isNil(item) && item.validationCode === FabricTransactionValidationCode.VALID;
+    }
+
+    public static isTransactionSucceed(item: ITransportFabricTransaction): boolean {
+        return TransportFabricBlockParser.isTransactionValid(item) && !TransportFabricBlockParser.isTransactionError(item);
     }
 
     // --------------------------------------------------------------------------

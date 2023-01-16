@@ -14,8 +14,8 @@ export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<
     //
     // --------------------------------------------------------------------------
 
-    public static getBatchTransaction(block: ITransportFabricBlockBatch): ITransportFabricTransactionBatch {
-        return _.find(block.transactions, item => !_.isNil(item.request) && item.request.name === TRANSPORT_FABRIC_COMMAND_BATCH_NAME);
+    public static getBatchTransaction(item: ITransportFabricBlockBatch): ITransportFabricTransactionBatch {
+        return _.find(item.transactions, item => !_.isNil(item.request) && item.request.name === TRANSPORT_FABRIC_COMMAND_BATCH_NAME);
     }
 
     // --------------------------------------------------------------------------
@@ -35,28 +35,24 @@ export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<
 
     public async parse(block: IFabricBlock): Promise<ITransportFabricBlockBatch> {
         let item = await super.parse(block);
-        let batchTransaction = TransportFabricBlockParserBatch.getBatchTransaction(item);
+        let batch = TransportFabricBlockParserBatch.getBatchTransaction(item);
 
-        item.isBatch = !_.isNil(batchTransaction) && !_.isNil(batchTransaction.response);
-        if (!item.isBatch) {
+        item.isBatch = !_.isNil(batch);
+        if (!item.isBatch || !TransportFabricBlockParserBatch.isTransactionSucceed(batch)) {
             item.events = [];
             item.transactions = [];
             return item;
         }
 
-        let payload = TransformUtil.toClass(TransportFabricResponsePayload, batchTransaction.response);
-        let transactions = (item.transactions = [batchTransaction]);
+        let payload = TransformUtil.toClass(TransportFabricResponsePayload, batch.response);
+        let transactions = (item.transactions = [batch]);
         for (let hash in payload.response) {
             let original = await this.api.qsccContract.getTransaction(hash);
-            let blockMined = await this.api.qsccContract.getBlockByTransactionId(hash);
+            let blockReceived = await this.api.qsccContract.getBlockByTransactionId(hash);
 
             let transaction = this.parseTransaction(original);
-            transaction.blockMined = blockMined.number;
-
             transaction.response = TransformUtil.toClass(TransportFabricResponsePayload, payload.response[hash]);
-            if (transaction.validationCode === FabricTransactionValidationCode.VALID && ExtendedError.instanceOf(transaction.response)) {
-                transaction.validationCode = FabricTransactionValidationCode.INVALID_OTHER_REASON;
-            }
+            transaction.blockReceived = blockReceived.number;
             transactions.push(transaction);
         }
         TransportFabricBlockParser.checkEventsCode(transactions, item.events);
