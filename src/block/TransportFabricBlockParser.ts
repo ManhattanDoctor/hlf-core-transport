@@ -27,9 +27,9 @@ export class TransportFabricBlockParser<
                     payload = payload.data;
                 }
             }
-            items = [TransportFabricBlockParser.createEvent(name, header, chaincode, payload, requestId)];
+            items = [TransportFabricBlockParser.createEvent(null, name, header, chaincode, payload, requestId)];
         } else {
-            items = TransformUtil.toJSONMany(JSON.parse(payload)).map(item => TransportFabricBlockParser.createEvent(item.name, header, chaincode, item.data, requestId));
+            items = TransformUtil.toJSONMany(JSON.parse(payload)).map(item => TransportFabricBlockParser.createEvent(item.uid, item.name, header, chaincode, item.data, requestId));
         }
         return items.filter(item => !_.isEmpty(item.name));
     }
@@ -46,8 +46,8 @@ export class TransportFabricBlockParser<
         }
     }
 
-    protected static createEvent<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, data: string, requestId: string): V {
-        return { channel: header.channel_id, transactionHash: header.tx_id, date: new Date(header.timestamp), name, data, chaincode, requestId } as V;
+    protected static createEvent<V extends ITransportFabricEvent>(uid: string, name: string, header: any, chaincode: string, data: string, requestId: string): V {
+        return { channel: header.channel_id, transactionHash: header.tx_id, date: new Date(header.timestamp), uid, name, data, chaincode, requestId } as V;
     }
 
     public static isTransactionError(item: ITransportFabricTransaction): boolean {
