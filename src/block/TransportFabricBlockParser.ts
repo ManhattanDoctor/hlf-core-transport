@@ -18,22 +18,6 @@ export class TransportFabricBlockParser<
     //
     // --------------------------------------------------------------------------
 
-    public static parseEvents<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, payload: any, requestId: string): Array<V> {
-        let items: Array<V> = [];
-        if (name !== TRANSPORT_CHAINCODE_EVENT) {
-            if (ObjectUtil.isJSON(payload)) {
-                payload = TransformUtil.toJSON(payload);
-                if (ObjectUtil.instanceOf(payload, ['data', 'name']) || payload.name === name) {
-                    payload = payload.data;
-                }
-            }
-            items = [TransportFabricBlockParser.createEvent(null, name, header, chaincode, payload, requestId)];
-        } else {
-            items = TransformUtil.toJSONMany(JSON.parse(payload)).map(item => TransportFabricBlockParser.createEvent(item.uid, item.name, header, chaincode, item.data, requestId));
-        }
-        return items.filter(item => !_.isEmpty(item.name));
-    }
-
     public static checkEventsCode<U extends ITransportFabricTransaction, V extends ITransportFabricEvent>(transactions: Array<U>, events: Array<V>): void {
         for (let event of events) {
             if (_.isNil(event.transactionHash)) {
@@ -203,6 +187,25 @@ export class TransportFabricBlockParser<
         }
 
         let data = action.payload.action.proposal_response_payload.extension.events;
-        return TransportFabricBlockParser.parseEvents(data.event_name, header, data.chaincode_id, data.payload.toString(), requestId);
+        return this.parseEvents(data.event_name, header, data.chaincode_id, data.payload.toString(), requestId);
+    }
+
+    protected parseEvents<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, payload: any, requestId: string): Array<V> {
+        let items: Array<V> = name === TRANSPORT_CHAINCODE_EVENT ? this.parseChaincodeEvents(name, header, chaincode, payload, requestId) : this.parseNotChaincodeEvents(name, header, chaincode, payload, requestId);
+        return items.filter(item => !_.isEmpty(item.name));
+    }
+
+    protected parseNotChaincodeEvents<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, payload: any, requestId: string): Array<V> {
+        if (ObjectUtil.isJSON(payload)) {
+            payload = TransformUtil.toJSON(payload);
+            if (ObjectUtil.instanceOf(payload, ['data', 'name']) || payload.name === name) {
+                payload = payload.data;
+            }
+        }
+        return [TransportFabricBlockParser.createEvent(null, name, header, chaincode, payload, requestId)];
+    }
+
+    protected parseChaincodeEvents<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, payload: any, requestId: string): Array<V> {
+        return JSON.parse(payload).map(item => TransportFabricBlockParser.createEvent(item.uid, item.name, header, chaincode, item.data, requestId));
     }
 }
