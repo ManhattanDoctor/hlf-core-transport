@@ -18,15 +18,17 @@ export class TransportFabricBlockParser<
     //
     // --------------------------------------------------------------------------
 
-    public static checkEventsCode<U extends ITransportFabricTransaction, V extends ITransportFabricEvent>(transactions: Array<U>, events: Array<V>): void {
-        for (let event of events) {
-            if (_.isNil(event.transactionHash)) {
+    public static checkEventsTransaction<U extends ITransportFabricTransaction, V extends ITransportFabricEvent>(events: Array<V>, transactions: Array<U>): void {
+        for (let item of events) {
+            if (_.isNil(item.transactionHash)) {
                 continue;
             }
-            let transaction = _.find(transactions, item => item.hash === event.transactionHash);
-            if (!_.isNil(transaction)) {
-                event.transactionValidationCode = transaction.validationCode;
+            let transaction = _.find(transactions, transaction => transaction.hash === item.transactionHash);
+            if (_.isNil(transaction)) {
+                continue;
             }
+            item.requestId = transaction.requestId;
+            item.transactionValidationCode = transaction.validationCode;
         }
     }
 
@@ -78,7 +80,7 @@ export class TransportFabricBlockParser<
                 events.push(...event);
             }
         }
-        TransportFabricBlockParser.checkEventsCode(transactions, events);
+        TransportFabricBlockParser.checkEventsTransaction(events, transactions);
         return item;
     }
 

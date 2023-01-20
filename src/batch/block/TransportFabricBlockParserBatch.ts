@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
-import { FabricApiClient, FabricTransactionValidationCode, IFabricBlock } from '@hlf-core/api';
-import { IDestroyable, ExtendedError, TransformUtil } from '@ts-core/common';
+import { FabricApiClient, IFabricBlock } from '@hlf-core/api';
+import { IDestroyable, TransformUtil } from '@ts-core/common';
 import { ITransportFabricBlockBatch } from './ITransportFabricBlockBatch';
 import { ITransportFabricEvent } from '../../block/ITransportFabricEvent';
 import { TransportFabricBlockParser } from '../../block/TransportFabricBlockParser';
@@ -36,7 +36,6 @@ export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<
 
     protected parseChaincodeEvents<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, payload: any, requestId: string): Array<V> {
         let items = new Array();
-
         payload = JSON.parse(payload);
         for (let hash in payload) {
             for (let event of payload[hash]) {
@@ -74,7 +73,7 @@ export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<
             transaction.blockReceived = blockReceived.number;
             transactions.push(transaction);
         }
-        TransportFabricBlockParser.checkEventsCode(transactions, item.events);
+        TransportFabricBlockParser.checkEventsTransaction(item.events, transactions);
         return item;
     }
 
