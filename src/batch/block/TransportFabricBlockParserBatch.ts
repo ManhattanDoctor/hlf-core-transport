@@ -34,12 +34,13 @@ export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<
     //
     // --------------------------------------------------------------------------
 
-    protected parseChaincodeEvents<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, payload: any, requestId: string): Array<V> {
-        let items = new Array();
+    protected parseChaincodeEvents<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, payload: any): Array<V> {
         payload = JSON.parse(payload);
+
+        let items = new Array();
         for (let hash in payload) {
             for (let event of payload[hash]) {
-                let item = TransportFabricBlockParser.createEvent(event.uid, event.name, header, chaincode, event.data, requestId);
+                let item = TransportFabricBlockParser.createEvent(event.uid, event.name, header, chaincode, event.data);
                 item.transactionHash = hash;
                 items.push(item);
             }
