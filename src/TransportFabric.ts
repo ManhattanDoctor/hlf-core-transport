@@ -219,18 +219,6 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         catch (error) {
             this.parseTransactionError(command, error);
         }
-
-        /*
-        this.transactionSend(this.api.contract.createTransaction(request.method), command, request)
-            .then(response => {
-                if (this.isCommandAsync(command) && isNeedReply) {
-                    this.responseMessageReceived(command.id, response);
-                }
-            })
-            .catch(error => {
-                this.parseTransactionError(command, error);
-            });
-        */
     }
 
     protected async transactionSend<U>(transaction: Transaction, command: ITransportCommand<U>, request: ITransportFabricRequestOptions<U>): Promise<any> {

@@ -4,7 +4,7 @@ import { TransportFabricBlockParserBatch } from './block/TransportFabricBlockPar
 import { IFabricBlock } from '@hlf-core/api';
 import { ITransportFabricConnectionSettings } from '../ITransportFabricConnectionSettings';
 import { TransportFabric } from '../TransportFabric';
-import { ITransportFabricCommandOptions, TransportFabricResponsePayload } from '@hlf-core/transport-common';
+import { ITransportFabricCommandOptions, TransportFabricRequestPayload, TransportFabricResponsePayload } from '@hlf-core/transport-common';
 import { TransportFabricBlockParser } from '../block';
 
 export class TransportFabricBatch<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends TransportFabric<T> {
@@ -31,7 +31,7 @@ export class TransportFabricBatch<T extends ITransportFabricConnectionSettings =
         }
 
         let request = this.createRequestOptions(command, options, isNeedReply);
-        // this.transactionSend(this.api.contract.createTransaction(request.method), command, request).catch(error => this.parseTransactionError(command, error));
+        TransportFabricRequestPayload.clear(request.payload);
 
         try {
             await this.transactionSend(this.api.contract.createTransaction(request.method), command, request);
