@@ -1,6 +1,6 @@
 {
     "name": "@hlf-core/transport",
-    "version": "3.1.7",
+    "version": "3.1.8",
     "description": "Hyperledger Fabric Transport",
     "main": "./cjs/public-api.js",
     "module": "./esm/public-api.js",
