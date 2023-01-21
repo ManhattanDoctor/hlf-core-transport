@@ -210,7 +210,6 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         let request = this.createRequestOptions(command, options, isNeedReply);
         TransportFabricRequestPayload.clear(request.payload);
 
-        /*
         try {
             let response = await this.transactionSend(this.api.contract.createTransaction(request.method), command, request);
             if (this.isCommandAsync(command) && isNeedReply) {
@@ -220,8 +219,8 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         catch (error) {
             this.parseTransactionError(command, error);
         }
-        */
 
+        /*
         this.transactionSend(this.api.contract.createTransaction(request.method), command, request)
             .then(response => {
                 if (this.isCommandAsync(command) && isNeedReply) {
@@ -231,6 +230,7 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
             .catch(error => {
                 this.parseTransactionError(command, error);
             });
+        */
     }
 
     protected async transactionSend<U>(transaction: Transaction, command: ITransportCommand<U>, request: ITransportFabricRequestOptions<U>): Promise<any> {

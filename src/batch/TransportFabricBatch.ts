@@ -31,15 +31,13 @@ export class TransportFabricBatch<T extends ITransportFabricConnectionSettings =
         }
 
         let request = this.createRequestOptions(command, options, isNeedReply);
-        this.transactionSend(this.api.contract.createTransaction(request.method), command, request)
-            .catch(error => this.parseTransactionError(command, error));
-        /*
+        // this.transactionSend(this.api.contract.createTransaction(request.method), command, request).catch(error => this.parseTransactionError(command, error));
+
         try {
             await this.transactionSend(this.api.contract.createTransaction(request.method), command, request);
         } catch (error) {
             this.parseTransactionError(command, error);
         }
-        */
     }
 
     protected async blockEventCallback(block: IFabricBlock): Promise<void> {
