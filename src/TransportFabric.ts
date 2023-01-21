@@ -207,17 +207,30 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
             throw new ExtendedError(`Unable to send "${command.name}" command request: transport is not connected`);
         }
 
-        try {
-            let request = this.createRequestOptions(command, options, isNeedReply);
-            TransportFabricRequestPayload.clear(request.payload);
+        let request = this.createRequestOptions(command, options, isNeedReply);
+        TransportFabricRequestPayload.clear(request.payload);
 
+        /*
+        try {
             let response = await this.transactionSend(this.api.contract.createTransaction(request.method), command, request);
             if (this.isCommandAsync(command) && isNeedReply) {
                 this.responseMessageReceived(command.id, response);
             }
-        } catch (error) {
+        }
+        catch (error) {
             this.parseTransactionError(command, error);
         }
+        */
+
+        this.transactionSend(this.api.contract.createTransaction(request.method), command, request)
+            .then(response => {
+                if (this.isCommandAsync(command) && isNeedReply) {
+                    this.responseMessageReceived(command.id, response);
+                }
+            })
+            .catch(error => {
+                this.parseTransactionError(command, error);
+            });
     }
 
     protected async transactionSend<U>(transaction: Transaction, command: ITransportCommand<U>, request: ITransportFabricRequestOptions<U>): Promise<any> {

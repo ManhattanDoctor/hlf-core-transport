@@ -26,17 +26,20 @@ export class TransportFabricBatch<T extends ITransportFabricConnectionSettings =
         if (this.isCommandReadonly(command)) {
             return super.requestSend(command, options, isNeedReply);
         }
-
         if (!this.isConnected) {
             throw new ExtendedError(`Unable to send "${command.name}" command request: transport is not connected`);
         }
 
+        let request = this.createRequestOptions(command, options, isNeedReply);
+        this.transactionSend(this.api.contract.createTransaction(request.method), command, request)
+            .catch(error => this.parseTransactionError(command, error));
+        /*
         try {
-            let request = this.createRequestOptions(command, options, isNeedReply);
             await this.transactionSend(this.api.contract.createTransaction(request.method), command, request);
         } catch (error) {
             this.parseTransactionError(command, error);
         }
+        */
     }
 
     protected async blockEventCallback(block: IFabricBlock): Promise<void> {
