@@ -15,8 +15,8 @@
         "email": "renat.gubaev@gmail.com"
     },
     "license": "ISC",
-    "dependencies": {
-        "@hlf-core/api": "^3.1.1",
+    "peerDependencies": {
+        "@hlf-core/api": "^3.1.2",
         "@hlf-core/transport-common": "^3.0.3"
     },
     "devDependencies": {
