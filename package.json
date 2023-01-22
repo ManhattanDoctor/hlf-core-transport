@@ -15,13 +15,13 @@
         "email": "renat.gubaev@gmail.com"
     },
     "license": "ISC",
-    "peerDependencies": {
-        "@hlf-core/api": "^3.1.2",
-        "@hlf-core/transport-common": "^3.0.3"
+    "dependencies": {
+        "@hlf-core/api": "~3.1.4",
+        "@hlf-core/transport-common": "~3.0.3"
     },
     "devDependencies": {
         "@types/node": "^14.18.12",
-        "gulp-npm-module-publisher": "^3.0.0"
+        "gulp-npm-module-publisher": "~3.0.0"
     },
     "repository": {
         "type": "git",
