@@ -134,17 +134,13 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         this._isConnected = false;
 
         if (!_.isNil(error)) {
-            this.error(error);
+            this.error(error)
         }
 
         if (this.settings.isExitApplicationOnDisconnect) {
             this.log(`Exit application: disconnected`);
             process.exit(0);
         }
-    }
-
-    public getSettings(): ITransportFabricConnectionSettings {
-        return this.settings;
     }
 
     // --------------------------------------------------------------------------
@@ -191,8 +187,8 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         if (this.isDestroyed) {
             return;
         }
-        super.destroy();
         this.disconnect();
+        super.destroy();
         this.requests = null;
     }
 
