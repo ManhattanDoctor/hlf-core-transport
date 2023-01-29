@@ -136,10 +136,10 @@ export class TransportFabricBlockParser<
         }
 
         transaction.request = TransformUtil.toJSON(chaincode.input.args[1].toString());
-        transaction.requestId =  transaction.request.id;
+        transaction.requestId = transaction.request.id;
 
         transaction.chaincode = chaincode.chaincode_id;
-        
+
         if (
             _.isNil(action.payload.action) ||
             _.isNil(action.payload.action.proposal_response_payload) ||
@@ -210,6 +210,17 @@ export class TransportFabricBlockParser<
     }
 
     protected parseChaincodeEvents<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, payload: any): Array<V> {
-        return JSON.parse(payload).map(item => TransportFabricBlockParser.createEvent(item.uid, item.name, header, chaincode, item.data));
+        // let items = payload.map(item => TransportFabricBlockParser.createEvent(item.uid, item.name, header, chaincode, item.data));
+        payload = JSON.parse(payload);
+        
+        let items = new Array();
+        for (let transactionHash in payload) {
+            for (let event of payload[transactionHash]) {
+                let item = TransportFabricBlockParser.createEvent(event.uid, event.name, header, chaincode, event.data);
+                item.transactionHash = transactionHash;
+                items.push(item);
+            }
+        }
+        return items;
     }
 }

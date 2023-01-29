@@ -30,26 +30,6 @@ export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<
 
     // --------------------------------------------------------------------------
     //
-    //  Protected Methods
-    //
-    // --------------------------------------------------------------------------
-
-    protected parseChaincodeEvents<V extends ITransportFabricEvent>(name: string, header: any, chaincode: string, payload: any): Array<V> {
-        payload = JSON.parse(payload);
-
-        let items = new Array();
-        for (let hash in payload) {
-            for (let event of payload[hash]) {
-                let item = TransportFabricBlockParser.createEvent(event.uid, event.name, header, chaincode, event.data);
-                item.transactionHash = hash;
-                items.push(item);
-            }
-        }
-        return items;
-    }
-
-    // --------------------------------------------------------------------------
-    //
     //  Public Methods
     //
     // --------------------------------------------------------------------------

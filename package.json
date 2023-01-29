@@ -1,6 +1,6 @@
 {
     "name": "@hlf-core/transport",
-    "version": "3.1.13",
+    "version": "3.2.0",
     "description": "Hyperledger Fabric Transport",
     "main": "./cjs/public-api.js",
     "module": "./esm/public-api.js",
@@ -17,7 +17,7 @@
     "license": "ISC",
     "dependencies": {
         "@hlf-core/api": "~3.1.4",
-        "@hlf-core/transport-common": "~3.0.4"
+        "@hlf-core/transport-common": "~3.0.8"
     },
     "devDependencies": {
         "@types/node": "^14.18.12",
