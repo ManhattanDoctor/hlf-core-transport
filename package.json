@@ -17,7 +17,7 @@
     "license": "ISC",
     "dependencies": {
         "@hlf-core/api": "~3.1.4",
-        "@hlf-core/transport-common": "~3.0.9"
+        "@hlf-core/transport-common": "~3.0.13"
     },
     "devDependencies": {
         "@types/node": "^14.18.12",

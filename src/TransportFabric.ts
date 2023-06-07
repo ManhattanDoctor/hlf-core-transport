@@ -1,61 +1,21 @@
 import {
     ITransportCommand,
     ITransportCommandAsync,
-    ITransportCommandOptions,
     ITransportEvent,
-    Transport,
     ILogger,
     PromiseHandler,
     ExtendedError,
-    LoadableEvent,
-    ObservableData,
-    TransportLogType,
-    TransportTimeoutError
+    TransportTimeoutError,
+    ITransportCommandRequest
 } from '@ts-core/common';
-import { DateUtil, ObjectUtil, TransformUtil, ValidateUtil } from '@ts-core/common';
+import { DateUtil, ObjectUtil, TransformUtil, TransportImpl, ValidateUtil } from '@ts-core/common';
 import { ContractListener, BlockListener, Transaction, BlockEvent, ContractEvent } from 'fabric-network';
 import { Block, FabricApiClient, IFabricBlock } from '@hlf-core/api';
 import { ITransportFabricConnectionSettings } from './ITransportFabricConnectionSettings';
-import { ITransportFabricCommandOptions, ITransportFabricRequestOptions, TransportFabricCommandOptions, TransportFabricRequestPayload, TransportFabricResponsePayload, TRANSPORT_FABRIC_METHOD } from '@hlf-core/transport-common';
-import { Observable } from 'rxjs';
+import { ITransportFabricCommandOptions, TransportFabricCommandOptions, TransportFabricRequestPayload, TransportFabricResponsePayload, TRANSPORT_FABRIC_METHOD, ITransportFabricRequestPayload } from '@hlf-core/transport-common';
 import * as _ from 'lodash';
 
-export class TransportFabric<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends Transport<T> {
-    // --------------------------------------------------------------------------
-    //
-    //  Static Methods
-    //
-    // --------------------------------------------------------------------------
-
-    protected static parseChaincodeError<U>(command: ITransportCommand<U>, error: any): ExtendedError {
-        let defaultError = new ExtendedError(`Unable to send "${command.name}" command request: ${error.message}`);
-        let item = null;
-        if (!_.isNil(error.response)) {
-            item = error.response;
-        } else if (!_.isEmpty(error.responses)) {
-            item = error.responses[0].response;
-        } else if (!_.isEmpty(error.endorsements)) {
-            item = error.endorsements[0];
-        }
-        if (!_.isNil(item)) {
-            error = TransportFabric.parseError(item);
-        }
-        return !_.isNil(error) ? error : defaultError;
-    }
-
-    protected static parseError(error: any): ExtendedError {
-        let message = error.message.replace('error in simulation: transaction returned with failure:', '').trim();
-        if (!ObjectUtil.isJSON(message)) {
-            return null;
-        }
-        let response = TransformUtil.toClass(TransportFabricResponsePayload, TransformUtil.toJSON(message));
-        if (!ExtendedError.instanceOf(response.response)) {
-            return null;
-        }
-        let item = ExtendedError.create(response.response);
-        item.stack = null;
-        return item;
-    }
+export class TransportFabric<T extends ITransportFabricConnectionSettings = ITransportFabricConnectionSettings> extends TransportImpl<T, ITransportFabricCommandOptions> {
 
     // --------------------------------------------------------------------------
     //
@@ -149,47 +109,12 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
     //
     // --------------------------------------------------------------------------
 
-    public send<U>(command: ITransportCommand<U>, options?: ITransportFabricCommandOptions): void {
-        this.requestSend(command, this.getCommandOptions(command, options), false);
-    }
-
-    public async sendListen<U, V>(command: ITransportCommandAsync<U, V>, options?: ITransportFabricCommandOptions): Promise<V> {
-        if (this.promises.has(command.id)) {
-            return this.promises.get(command.id).handler.promise;
-        }
-
-        options = this.getCommandOptions(command, options);
-
-        let handler = PromiseHandler.create<V, ExtendedError>();
-        this.promises.set(command.id, { command, handler, options });
-        this.requestSend(command, options, true);
-        this.commandTimeout(command, options);
-        return handler.promise;
-    }
-
-    public complete<U, V>(command: ITransportCommand<U>, result?: V | Error): void {
-        throw new ExtendedError(`Method is not supported, implemented only in chaincode`);
-    }
-
-    public wait<U>(command: ITransportCommand<U>): void {
-        throw new ExtendedError(`Method is not supported, implemented only in chaincode`);
-    }
-
-    public dispatch<T>(event: ITransportEvent<T>): void {
-        throw new ExtendedError(`Method is not supported, implemented only in chaincode`);
-    }
-
-    public listen<U>(name: string): Observable<U> {
-        throw new ExtendedError(`Method is not supported, implemented only in chaincode`);
-    }
-
     public destroy(): void {
         if (this.isDestroyed) {
             return;
         }
         this.disconnect();
         super.destroy();
-        this.requests = null;
     }
 
     // --------------------------------------------------------------------------
@@ -198,62 +123,23 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
     //
     // --------------------------------------------------------------------------
 
-    protected async requestSend<U>(command: ITransportCommand<U>, options: ITransportFabricCommandOptions, isNeedReply: boolean): Promise<void> {
+    protected async commandRequestExecute<U>(command: ITransportCommand<U>, options: ITransportFabricCommandOptions, isNeedReply: boolean): Promise<void> {
         if (!this.isConnected) {
             throw new ExtendedError(`Unable to send "${command.name}" command request: transport is not connected`);
         }
 
-        let request = this.createRequestOptions(command, options, isNeedReply);
-        TransportFabricRequestPayload.clear(request.payload);
+        let payload = this.createRequestPayload(command, options, isNeedReply);
+        TransportFabricRequestPayload.clear(payload);
 
-        try {
-            let response = await this.transactionSend(this.api.contract.createTransaction(request.method), command, request);
-            if (this.isCommandAsync(command) && isNeedReply) {
-                this.responseMessageReceived(command.id, response);
-            }
-        }
-        catch (error) {
-            this.parseTransactionError(command, error);
+        let response = await this.transactionSend(this.api.contract.createTransaction(TRANSPORT_FABRIC_METHOD), command, payload);
+        if (isNeedReply && this.isCommandAsync(command)) {
+            this.responseMessageReceived(command.id, response);
         }
     }
 
-    protected async transactionSend<U>(transaction: Transaction, command: ITransportCommand<U>, request: ITransportFabricRequestOptions<U>): Promise<any> {
-        this.logCommand(command, request.payload.isNeedReply ? TransportLogType.REQUEST_SENDED : TransportLogType.REQUEST_NO_REPLY);
-        this.observer.next(new ObservableData(LoadableEvent.STARTED, command));
-
-        let method = request.payload.isReadonly ? transaction.evaluate : transaction.submit;
-        return method.call(transaction, TransformUtil.fromJSON(TransformUtil.fromClass(request.payload)));
-    }
-
-    protected async parseTransactionError<U>(command: ITransportCommand<U>, error: Error): Promise<any> {
-        error = ExtendedError.instanceOf(error) ? error : TransportFabric.parseChaincodeError(command, error);
-        if (!this.isCommandAsync(command)) {
-            return;
-        }
-        command.response(error);
-        this.logCommand(command, TransportLogType.RESPONSE_RECEIVED);
-        this.commandProcessed(command);
-    }
-
-    protected async eventSend<U>(event: ITransportEvent<U>): Promise<void> {
-        if (!this.isConnected) {
-            throw new ExtendedError(`Unable to send "${event.name}" event: transport is not connected`);
-        }
-        this.logEvent(event, TransportLogType.EVENT_SENDED);
-    }
-
-    protected async waitSend<U>(command: ITransportCommand<U>): Promise<void> {
-        if (!this.isConnected) {
-            throw new ExtendedError(`Unable to send wait "${command.name}" command: transport is not connected`);
-        }
-        this.logCommand(command, TransportLogType.RESPONSE_WAIT);
-    }
-
-    protected getCommandTimeoutDelay<U>(command: ITransportCommand<U>, options: ITransportCommandOptions): number {
-        if (_.isNil(options) || _.isNil(options.timeout)) {
-            return Transport.DEFAULT_TIMEOUT;
-        }
-        return super.getCommandTimeoutDelay(command, options);
+    protected async transactionSend<U>(transaction: Transaction, command: ITransportCommand<U>, payload: ITransportFabricRequestPayload<U>): Promise<any> {
+        let method = payload.isReadonly ? transaction.evaluate : transaction.submit;
+        return method.call(transaction, TransformUtil.fromJSON(TransformUtil.fromClass(payload)));
     }
 
     // --------------------------------------------------------------------------
@@ -262,32 +148,22 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
     //
     // --------------------------------------------------------------------------
 
-    protected responseMessageReceived(id: string, data: Buffer): void {
+    protected responseMessageReceived(id: string, item: Buffer): void {
         let promise = this.promises.get(id);
         if (_.isNil(promise)) {
-            this.error(`Invalid response: unable to find command "${id}" (probably timeout already expired)`);
+            this.warn(`Unable to find command promise: probably command was already completed`);
             return;
         }
 
         let payload: TransportFabricResponsePayload = null;
         try {
-            payload = TransportFabricResponsePayload.parse(data);
+            payload = TransportFabricResponsePayload.parse(item);
         } catch (error) {
-            payload = new TransportFabricResponsePayload();
-            payload.id = id;
-            payload.response = ExtendedError.create(error);
+            payload = TransportFabricResponsePayload.fromError(id, ExtendedError.create(error));
         }
-
-        let command = promise.command;
-        command.response(payload.response);
-
-        // Remove stack from error because it's useless
-        if (this.isCommandHasError(command)) {
-            command.error.stack = null;
+        finally {
+            this.commandRequestResponseReceived(promise, payload.response);
         }
-
-        this.logCommand(command, TransportLogType.RESPONSE_RECEIVED);
-        this.commandProcessed(command);
     }
 
     // --------------------------------------------------------------------------
@@ -296,26 +172,22 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
     //
     // --------------------------------------------------------------------------
 
-    protected createRequestOptions<U>(
-        command: ITransportCommand<U>,
-        options: ITransportFabricCommandOptions,
-        isNeedReply: boolean
-    ): ITransportFabricRequestOptions<U> {
-        let payload = new TransportFabricRequestPayload<U>();
-        payload.id = command.id;
-        payload.name = command.name;
-        payload.options = TransformUtil.toClass(TransportFabricCommandOptions, options);
+    protected createRequestPayload<U>(command: ITransportCommand<U>, options: ITransportFabricCommandOptions, isNeedReply: boolean): ITransportFabricRequestPayload<U> {
+        let item = new TransportFabricRequestPayload<U>();
+        item.id = command.id;
+        item.name = command.name;
+        item.options = TransformUtil.toClass(TransportFabricCommandOptions, options);
         if (!_.isNil(command.request)) {
-            payload.request = command.request;
+            item.request = command.request;
         }
         if (this.isCommandReadonly(command)) {
-            payload.isReadonly = true;
+            item.isReadonly = true;
         }
         if (isNeedReply) {
-            payload.isNeedReply = isNeedReply;
+            item.isNeedReply = isNeedReply;
         }
-        ValidateUtil.validate(payload);
-        return { method: TRANSPORT_FABRIC_METHOD, payload };
+        ValidateUtil.validate(item);
+        return item;
     }
 
     protected getCommandOptions<U>(command: ITransportCommand<U>, options: ITransportFabricCommandOptions): ITransportFabricCommandOptions {
@@ -334,28 +206,15 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         return false;
     }
 
-    protected _dispatch<T>(event: ITransportEvent<T>): void {
-        let item = this.dispatchers.get(event.name);
-        if (_.isNil(item)) {
-            return;
-        }
-        this.logEvent(event, TransportLogType.EVENT_SENDED);
-        item.next(event);
-    }
-
     // --------------------------------------------------------------------------
     //
-    //  Event Handlers
+    //  Connection Methods
     //
     // --------------------------------------------------------------------------
 
-    private blockEventCallbackProxy = async (event: BlockEvent): Promise<void> => {
-        this.blockEventCallback(FabricApiClient.parseBlock(event.blockData as Block));
-    };
+    private blockEventCallbackProxy = async (event: BlockEvent): Promise<void> => this.blockEventCallback(FabricApiClient.parseBlock(event.blockData as Block));
 
-    private contractEventCallbackProxy = async (event: ContractEvent): Promise<void> => {
-        this.contractEventCallback(event);
-    };
+    private contractEventCallbackProxy = async (event: ContractEvent): Promise<void> => this.contractEventCallback(event);
 
     protected async connectionCompleteHandler(): Promise<void> {
         this._isConnected = true;
@@ -397,6 +256,49 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
             this.debug(`Trying to reconnect (attempt ${this.connectionAttempts}): ${error.message}`);
             this.reconnect();
         }
+    }
+
+    protected parseError(error: any): ExtendedError {
+        if (error instanceof Error || ExtendedError.instanceOf(error)) {
+            return super.parseError(error);
+        }
+
+        let item = null;
+        if (!_.isNil(error.response)) {
+            item = error.response;
+        } else if (!_.isEmpty(error.responses)) {
+            item = error.responses[0].response;
+        } else if (!_.isEmpty(error.endorsements)) {
+            item = error.endorsements[0];
+        }
+
+        let defaultError = new ExtendedError(`Unable to send command request: ${error.message}`);
+        if (!_.isNil(item)) {
+            error = this.parseChaincodeError(item);
+        }
+        return !_.isNil(error) ? error : defaultError;
+    }
+
+    protected parseChaincodeError(error: any): ExtendedError {
+        let message = error.message.replace('error in simulation: transaction returned with failure:', '').trim();
+        if (!ObjectUtil.isJSON(message)) {
+            return null;
+        }
+        let response = TransformUtil.toClass(TransportFabricResponsePayload, TransformUtil.toJSON(message));
+        if (!ExtendedError.instanceOf(response.response)) {
+            return null;
+        }
+        let item = ExtendedError.create(response.response);
+        item.stack = null;
+        return item;
+    }
+
+    protected eventRequestExecute<U>(event: ITransportEvent<U>, options?: void): Promise<void> {
+        throw new ExtendedError(`Method doesn't supported`);
+    }
+
+    protected commandResponseExecute<U, V>(command: ITransportCommandAsync<U, V>, request: ITransportCommandRequest): Promise<void> {
+        throw new ExtendedError(`Method doesn't supported`);
     }
 
     // --------------------------------------------------------------------------
