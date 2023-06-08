@@ -259,7 +259,7 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
     }
 
     protected parseError(error: any): ExtendedError {
-        if (error instanceof Error || ExtendedError.instanceOf(error)) {
+        if (ExtendedError.instanceOf(error)) {
             return super.parseError(error);
         }
 
