@@ -271,12 +271,15 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         } else if (!_.isEmpty(error.endorsements)) {
             item = error.endorsements[0];
         }
+        else if (error.status === 500) {
+            item = error;
+        }
 
-        let defaultError = new ExtendedError(`Unable to send command request: ${error.message}`);
+        let { message } = error;
         if (!_.isNil(item)) {
             error = this.parseChaincodeError(item);
         }
-        return !_.isNil(error) ? error : defaultError;
+        return !_.isNil(error) ? error : new ExtendedError(`Unable to send command request: ${message}`);
     }
 
     protected parseChaincodeError(error: any): ExtendedError {
