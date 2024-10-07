@@ -18,6 +18,10 @@ export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<
         return _.find(item.transactions, item => !_.isNil(item.request) && item.request.name === TRANSPORT_FABRIC_COMMAND_BATCH_NAME);
     }
 
+    public static getSucceedBatchTransaction(item: ITransportFabricBlockBatch): ITransportFabricTransactionBatch {
+        return _.find(item.transactions, item => TransportFabricBlockParser.isTransactionSucceed(item) && !_.isNil(item.request) && item.request.name === TRANSPORT_FABRIC_COMMAND_BATCH_NAME);
+    }
+
     // --------------------------------------------------------------------------
     //
     //  Constructor
@@ -36,8 +40,8 @@ export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<
 
     public async parse(block: IFabricBlock): Promise<ITransportFabricBlockBatch> {
         let item = await super.parse(block);
-        let batch = TransportFabricBlockParserBatch.getBatchTransaction(item);
-        if (_.isNil(batch) || !TransportFabricBlockParser.isTransactionSucceed(batch)) {
+        let batch = TransportFabricBlockParserBatch.getSucceedBatchTransaction(item);
+        if (_.isNil(batch)) {
             item.events = [];
             item.transactions = [];
             return item;

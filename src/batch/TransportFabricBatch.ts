@@ -46,8 +46,8 @@ export class TransportFabricBatch<T extends ITransportFabricConnectionSettings =
 
         let parser = new TransportFabricBlockParserBatch(this.api);
         let parsedBlock = await parser.parse(block);
-        let batch = TransportFabricBlockParserBatch.getBatchTransaction(parsedBlock);
-        if (_.isNil(batch) || !TransportFabricBlockParser.isTransactionSucceed(batch)) {
+        let batch = TransportFabricBlockParserBatch.getSucceedBatchTransaction(parsedBlock);
+        if (_.isNil(batch)) {
             return;
         }
         let payload = TransformUtil.toClass(TransportFabricResponsePayload, batch.response);
