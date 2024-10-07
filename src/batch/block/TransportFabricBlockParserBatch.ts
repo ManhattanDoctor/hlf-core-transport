@@ -43,8 +43,10 @@ export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<
             return item;
         }
 
+        let events = item.events = _.uniqBy(item.events, 'uid');
         let payload = TransformUtil.toClass(TransportFabricResponsePayload, batch.response);
-        let transactions = (item.transactions = [batch]);
+        let transactions = item.transactions = [batch];
+
         for (let hash in payload.response) {
             let original = await this.api.qsccContract.getTransaction(hash);
             let blockReceived = await this.api.qsccContract.getBlockByTransactionId(hash);
@@ -54,7 +56,7 @@ export class TransportFabricBlockParserBatch extends TransportFabricBlockParser<
             transaction.blockReceived = blockReceived.number;
             transactions.push(transaction);
         }
-        TransportFabricBlockParser.checkEventsTransaction(item.events, transactions);
+        TransportFabricBlockParser.checkEventsTransaction(events, transactions);
         return item;
     }
 
