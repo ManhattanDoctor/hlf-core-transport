@@ -98,8 +98,8 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         }
 
         if (this.settings.isExitApplicationOnDisconnect) {
-            this.log(`Exit application: disconnected`);
-            process.exit(0);
+            this.error(`Exit application: disconnected from Fabric`);
+            process.exit(1);
         }
     }
 
