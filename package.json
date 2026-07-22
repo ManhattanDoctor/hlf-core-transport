@@ -1,7 +1,7 @@
 {
     "name": "@hlf-core/transport",
     "version": "3.2.9",
-    "description": "Hyperledger Fabric Transport",
+    "description": "TypeScript library for Hyperledger Fabric client transport: command sending, block and event parsing, batch delivery and chaincode error handling",
     "main": "./cjs/public-api.js",
     "module": "./esm/public-api.js",
     "exports": {
@@ -28,6 +28,14 @@
         "url": "git+https://github.com/ManhattanDoctor/hlf-core-chaincode.git"
     },
     "keywords": [
+        "hyperledger",
+        "hyperledger-fabric",
+        "fabric",
+        "transport",
+        "blockchain",
+        "distributed-ledger",
+        "block-parser",
+        "chaincode",
         "typescript"
     ],
     "bugs": {
