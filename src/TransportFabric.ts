@@ -54,7 +54,7 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
             throw new ExtendedError(`Unable to connect: settings is nil`);
         }
         if (!_.isNumber(this.settings.reconnectDelay)) {
-            this.settings.reconnectDelay = DateUtil.MILISECONDS_SECOND;
+            this.settings.reconnectDelay = DateUtil.MILLISECONDS_SECOND;
         }
         if (!_.isNumber(this.settings.reconnectMaxAttempts)) {
             this.settings.reconnectMaxAttempts = 0;
@@ -258,7 +258,7 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         }
     }
 
-    protected parseError(error: any): ExtendedError {
+    protected parseError<U, V>(error: any): ExtendedError<U, V> {
         if (ExtendedError.instanceOf(error)) {
             return super.parseError(error);
         }
@@ -282,7 +282,7 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         return !_.isNil(error) ? error : new ExtendedError(`Unable to send command request: ${message}`);
     }
 
-    protected parseChaincodeError(error: any): ExtendedError {
+    protected parseChaincodeError<U, V>(error: any): ExtendedError<U, V> {
         let message = error.message.replace('error in simulation: transaction returned with failure:', '').trim();
         if (!ObjectUtil.isJSON(message)) {
             return null;
@@ -291,7 +291,7 @@ export class TransportFabric<T extends ITransportFabricConnectionSettings = ITra
         if (!ExtendedError.instanceOf(response.response)) {
             return null;
         }
-        let item = ExtendedError.create(response.response);
+        let item = ExtendedError.create<U, V>(response.response);
         item.stack = null;
         return item;
     }
