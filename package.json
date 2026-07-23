@@ -25,7 +25,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ManhattanDoctor/hlf-core-chaincode.git"
+        "url": "git+https://github.com/ManhattanDoctor/hlf-core-transport.git"
     },
     "keywords": [
         "hyperledger",
@@ -39,7 +39,7 @@
         "typescript"
     ],
     "bugs": {
-        "url": "https://github.com/ManhattanDoctor/hlf-core-chaincode/issues"
+        "url": "https://github.com/ManhattanDoctor/hlf-core-transport/issues"
     },
-    "homepage": "https://github.com/ManhattanDoctor/hlf-core-chaincode#readme"
+    "homepage": "https://github.com/ManhattanDoctor/hlf-core-transport#readme"
 }
